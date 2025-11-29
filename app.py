@@ -9,9 +9,11 @@ from werkzeug.security import generate_password_hash
 from application.celery_init import celery_init_app
 from celery.schedules import crontab
 from application.task import daily_reminder, monthly_report
+from flask_cors import CORS
 
 def create_app():
     app = Flask(__name__)
+    CORS(app)
     app.config.from_object(LocalDevelopmentConfig)
     db.init_app(app)
     cache.init_app(app)
