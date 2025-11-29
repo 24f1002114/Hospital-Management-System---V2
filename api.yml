@@ -1,0 +1,1665 @@
+openapi: 3.0.3
+info:
+  title: Hospital Management System API
+  description: |
+    A comprehensive healthcare management system API for managing doctors, patients, 
+    appointments, treatments, and medical records. The system supports role-based 
+    access control with admin, doctor, and patient roles.
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@healthcare-api.com
+
+servers:
+  - url: http://localhost:5000
+    description: Development server
+  - url: https://api.healthcare-system.com
+    description: Production server
+
+tags:
+  - name: Authentication
+    description: User authentication and registration
+  - name: Doctors
+    description: Doctor registration and profile management
+  - name: Patients
+    description: Patient profile management
+  - name: Departments
+    description: Hospital department management
+  - name: Appointments
+    description: Appointment booking and management
+  - name: Treatments
+    description: Medical treatment records
+  - name: Availability
+    description: Doctor availability scheduling
+  - name: Search
+    description: Search functionality for doctors and patients
+  - name: Blacklist
+    description: User blacklist management
+  - name: Export
+    description: CSV report generation and download
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token authentication
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Error message
+
+    Doctor:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: User ID of the doctor
+        email:
+          type: string
+          format: email
+        username:
+          type: string
+        name:
+          type: string
+        age:
+          type: integer
+          minimum: 18
+        gender:
+          type: string
+          enum: [Male, Female, Other]
+        degree:
+          type: string
+          description: Medical degree
+        specialization:
+          type: string
+          description: Medical specialization
+        years_of_experience:
+          type: integer
+          minimum: 0
+        bio:
+          type: string
+          description: Doctor's biography
+        blacklisted:
+          type: boolean
+          default: false
+        departments:
+          type: array
+          items:
+            type: integer
+          description: Array of department IDs
+
+    DoctorRegistration:
+      type: object
+      required:
+        - email
+        - username
+        - name
+        - degree
+        - specialization
+        - years_of_experience
+        - departments
+      properties:
+        email:
+          type: string
+          format: email
+        username:
+          type: string
+        name:
+          type: string
+        age:
+          type: integer
+        gender:
+          type: string
+          enum: [Male, Female, Other]
+        password:
+          type: string
+          default: "1234"
+        degree:
+          type: string
+        specialization:
+          type: string
+        years_of_experience:
+          type: integer
+          minimum: 0
+        bio:
+          type: string
+        role:
+          type: string
+          default: doctor
+        departments:
+          type: array
+          items:
+            type: integer
+          minItems: 1
+
+    Patient:
+      type: object
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+          format: email
+        username:
+          type: string
+        name:
+          type: string
+        age:
+          type: integer
+        gender:
+          type: string
+          enum: [Male, Female, Other]
+        contact_number:
+          type: string
+        address:
+          type: string
+        medical_history:
+          type: string
+        blacklisted:
+          type: boolean
+          default: false
+
+    PatientUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        age:
+          type: integer
+        gender:
+          type: string
+        contact_number:
+          type: string
+        address:
+          type: string
+        medical_history:
+          type: string
+
+    Department:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        doctors:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              name:
+                type: string
+
+    DepartmentCreate:
+      type: object
+      required:
+        - name
+        - description
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+
+    Appointment:
+      type: object
+      properties:
+        id:
+          type: integer
+        patient_id:
+          type: integer
+        patient_name:
+          type: string
+        doctor_id:
+          type: integer
+        doctor_name:
+          type: string
+        specialization:
+          type: string
+        department:
+          type: string
+        slot_id:
+          type: integer
+        slot_details:
+          type: object
+          properties:
+            date:
+              type: string
+              format: date
+            day_of_week:
+              type: string
+            start_time:
+              type: string
+              format: time
+            end_time:
+              type: string
+              format: time
+        status:
+          type: string
+          enum: [Booked, Cancelled, Completed, No-show]
+        created_at:
+          type: string
+          format: date-time
+
+    AppointmentCreate:
+      type: object
+      required:
+        - doctor_id
+        - department
+        - slot_id
+      properties:
+        doctor_id:
+          type: integer
+        department:
+          type: string
+        slot_id:
+          type: integer
+        status:
+          type: string
+          default: Booked
+          enum: [Booked, Cancelled, Completed, No-show]
+
+    AppointmentUpdate:
+      type: object
+      properties:
+        doctor_id:
+          type: integer
+        department:
+          type: string
+        slot_id:
+          type: integer
+        status:
+          type: string
+          enum: [Booked, Cancelled, Completed, No-show]
+
+    Treatment:
+      type: object
+      properties:
+        id:
+          type: integer
+        appointment_id:
+          type: integer
+        patient_id:
+          type: integer
+        patient_name:
+          type: string
+        doctor_name:
+          type: string
+        department:
+          type: string
+        visit_type:
+          type: string
+          default: In-person
+        tests_done:
+          type: string
+        diagnosis:
+          type: string
+        prescription:
+          type: string
+        notes:
+          type: string
+        next_visit_date:
+          type: string
+          format: date
+          nullable: true
+        medicines:
+          type: array
+          items:
+            $ref: '#/components/schemas/Medicine'
+
+    TreatmentCreate:
+      type: object
+      required:
+        - appointment_id
+        - diagnosis
+        - prescription
+        - medicines
+      properties:
+        appointment_id:
+          type: integer
+        visit_type:
+          type: string
+          default: In-person
+        tests_done:
+          type: string
+        diagnosis:
+          type: string
+        prescription:
+          type: string
+        notes:
+          type: string
+        next_visit_date:
+          type: string
+          format: date
+        medicines:
+          type: array
+          items:
+            $ref: '#/components/schemas/Medicine'
+
+    Medicine:
+      type: object
+      properties:
+        name:
+          type: string
+        dosage:
+          type: string
+        duration_days:
+          type: integer
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+
+    LoginResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        id:
+          type: integer
+        username:
+          type: string
+        roles:
+          type: array
+          items:
+            type: string
+        auth_token:
+          type: string
+
+    PatientRegistration:
+      type: object
+      required:
+        - email
+        - username
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        username:
+          type: string
+        password:
+          type: string
+          format: password
+        name:
+          type: string
+        age:
+          type: integer
+          minimum: 0
+        gender:
+          type: string
+          enum: [Male, Female, Other]
+        contact_number:
+          type: string
+        address:
+          type: string
+        medical_history:
+          type: string
+
+    RegistrationResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+
+    ExportTaskResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Task ID for tracking export status
+        status:
+          type: string
+          description: Current task status
+
+    ExportStatusResponse:
+      type: object
+      properties:
+        task_id:
+          type: string
+        status:
+          type: string
+          enum: [PENDING, STARTED, SUCCESS, FAILURE, RETRY]
+        ready:
+          type: boolean
+
+    DoctorAvailability:
+      type: object
+      properties:
+        id:
+          type: integer
+        date:
+          type: string
+          format: date
+        day_of_week:
+          type: string
+        start_time:
+          type: string
+          format: time
+        end_time:
+          type: string
+          format: time
+        is_active:
+          type: boolean
+          default: true
+
+    AvailabilityCreate:
+      type: object
+      required:
+        - date
+        - day_of_week
+        - start_time
+        - end_time
+      properties:
+        date:
+          type: string
+          format: date
+          description: Date in YYYY-MM-DD format
+        day_of_week:
+          type: string
+        start_time:
+          type: string
+          pattern: '^([0-1][0-9]|2[0-3]):[0-5][0-9]$'
+          description: Time in HH:MM format
+        end_time:
+          type: string
+          pattern: '^([0-1][0-9]|2[0-3]):[0-5][0-9]$'
+          description: Time in HH:MM format
+        is_active:
+          type: boolean
+          default: true
+
+security:
+  - bearerAuth: []
+
+paths:
+  /:
+    get:
+      tags:
+        - Authentication
+      summary: Home page
+      description: Returns the main application HTML page
+      security: []
+      responses:
+        '200':
+          description: HTML home page
+          content:
+            text/html:
+              schema:
+                type: string
+
+  /api/login:
+    post:
+      tags:
+        - Authentication
+      summary: User login
+      description: Authenticate user and receive auth token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          description: Missing credentials or incorrect password
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+
+  /api/register:
+    post:
+      tags:
+        - Authentication
+      summary: Patient registration
+      description: Register a new patient account
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatientRegistration'
+      responses:
+        '201':
+          description: Patient registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistrationResponse'
+        '400':
+          description: Invalid request or user already exists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+
+  /api/export:
+    post:
+      tags:
+        - Export
+      summary: Request CSV report export
+      description: |
+        Patient-only endpoint to initiate asynchronous generation of treatment report CSV.
+        Returns a task ID that can be used to check export status and download the file.
+      security:
+        - bearerAuth: []
+      responses:
+        '202':
+          description: Export task initiated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExportTaskResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - Patient role required
+
+  /api/csv_result/{task_id}:
+    get:
+      tags:
+        - Export
+      summary: Get CSV export result
+      description: |
+        Check status of export task and download CSV file when ready.
+        Returns task status while processing, or downloads the CSV file when complete.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Task ID returned from export request
+      responses:
+        '200':
+          description: CSV file ready for download
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+              description: attachment; filename="treatment_report_patient_{id}_{timestamp}.csv"
+        '202':
+          description: Task still processing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExportStatusResponse'
+        '403':
+          description: Forbidden - Can only download own exports
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+        '404':
+          description: File not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  filename:
+                    type: string
+        '500':
+          description: Invalid task result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+  /api/doctors:
+    post:
+      tags:
+        - Doctors
+      summary: Register a new doctor
+      description: Admin-only endpoint to register a new doctor in the system
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DoctorRegistration'
+      responses:
+        '201':
+          description: Doctor registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  id:
+                    type: integer
+        '400':
+          description: Email already registered or username taken
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - Admin role required
+
+    get:
+      tags:
+        - Doctors
+      summary: Get all doctors
+      description: Retrieve a list of all doctors (cached for 5 minutes)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of doctors
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Doctor'
+        '401':
+          description: Unauthorized
+
+  /api/doctor/{doctor_id}:
+    get:
+      tags:
+        - Doctors
+      summary: Get doctor by ID
+      description: Retrieve detailed information about a specific doctor
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: doctor_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Doctor details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Doctor'
+        '404':
+          description: Doctor not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    put:
+      tags:
+        - Doctors
+      summary: Update doctor information
+      description: Admin-only endpoint to update doctor profile
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: doctor_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DoctorRegistration'
+      responses:
+        '200':
+          description: Doctor updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '404':
+          description: Doctor not found
+        '403':
+          description: Forbidden - Admin role required
+
+    delete:
+      tags:
+        - Doctors
+      summary: Delete a doctor
+      description: Admin-only endpoint to delete a doctor and all related data
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: doctor_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Doctor deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '404':
+          description: Doctor not found
+        '403':
+          description: Forbidden - Admin role required
+
+  /api/patients:
+    get:
+      tags:
+        - Patients
+      summary: Get all patients
+      description: Admin-only endpoint to retrieve all patients
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of patients
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Patient'
+        '403':
+          description: Forbidden - Admin role required
+
+  /api/patient/{patient_id}:
+    get:
+      tags:
+        - Patients
+      summary: Get patient by ID
+      description: Retrieve patient information (own profile or admin access)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: patient_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Patient details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Patient'
+        '403':
+          description: Permission denied
+        '404':
+          description: Patient not found
+
+    put:
+      tags:
+        - Patients
+      summary: Update patient profile
+      description: Update patient information (own profile or admin access)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: patient_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatientUpdate'
+      responses:
+        '200':
+          description: Patient profile updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '403':
+          description: Permission denied
+        '404':
+          description: Patient not found
+
+    delete:
+      tags:
+        - Patients
+      summary: Delete a patient
+      description: Admin-only endpoint to delete a patient and all related data
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: patient_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Patient deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '404':
+          description: Patient not found
+        '403':
+          description: Forbidden - Admin role required
+
+  /api/user/{id}/blacklist:
+    post:
+      tags:
+        - Blacklist
+      summary: Blacklist a user
+      description: Admin-only endpoint to blacklist a doctor or patient
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: User blacklisted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '404':
+          description: User not found
+        '403':
+          description: Forbidden - Admin role required
+
+    delete:
+      tags:
+        - Blacklist
+      summary: Remove user from blacklist
+      description: Admin-only endpoint to remove a user from blacklist
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: User removed from blacklist
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '404':
+          description: User not found
+        '403':
+          description: Forbidden - Admin role required
+
+  /api/departments:
+    post:
+      tags:
+        - Departments
+      summary: Create a new department
+      description: Admin-only endpoint to create a hospital department
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DepartmentCreate'
+      responses:
+        '201':
+          description: Department created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  id:
+                    type: integer
+        '400':
+          description: Department name must be unique
+        '403':
+          description: Forbidden - Admin role required
+
+    get:
+      tags:
+        - Departments
+      summary: Get all departments
+      description: Retrieve all departments (cached for 5 minutes)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of departments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Department'
+
+  /api/department/{id}:
+    get:
+      tags:
+        - Departments
+      summary: Get department by ID
+      description: Retrieve detailed information about a specific department
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Department details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Department'
+        '404':
+          description: Department not found
+
+    put:
+      tags:
+        - Departments
+      summary: Update department
+      description: Admin-only endpoint to update department information
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DepartmentCreate'
+      responses:
+        '200':
+          description: Department updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '400':
+          description: Department name must be unique
+        '404':
+          description: Department not found
+
+    delete:
+      tags:
+        - Departments
+      summary: Delete a department
+      description: Admin-only endpoint to delete a department
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Department deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '404':
+          description: Department not found
+
+  /api/appointments:
+    post:
+      tags:
+        - Appointments
+      summary: Book an appointment
+      description: Patient-only endpoint to book a new appointment
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppointmentCreate'
+      responses:
+        '201':
+          description: Appointment booked successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  id:
+                    type: integer
+                  department:
+                    type: string
+                  slot_id:
+                    type: integer
+                  slot_details:
+                    type: object
+        '400':
+          description: Invalid request or slot already booked
+        '403':
+          description: User is blacklisted
+        '404':
+          description: Doctor or department not found
+
+    get:
+      tags:
+        - Appointments
+      summary: Get appointments
+      description: Retrieve appointments (filtered by user role)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: department
+          in: query
+          schema:
+            type: string
+        - name: doctor_id
+          in: query
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [Booked, Cancelled, Completed, No-show]
+        - name: day_of_week
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of appointments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Appointment'
+        '403':
+          description: User is blacklisted
+        '404':
+          description: No appointments found
+
+  /api/appointment/{appointment_id}:
+    get:
+      tags:
+        - Appointments
+      summary: Get appointment by ID
+      description: Retrieve detailed information about a specific appointment
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: appointment_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Appointment details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Appointment'
+        '403':
+          description: User is blacklisted
+        '404':
+          description: Appointment not found
+
+    put:
+      tags:
+        - Appointments
+      summary: Update an appointment
+      description: Update appointment details (status, slot, etc.)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: appointment_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppointmentUpdate'
+      responses:
+        '200':
+          description: Appointment updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Appointment'
+        '400':
+          description: Invalid request or slot conflict
+        '403':
+          description: Permission denied
+        '404':
+          description: Appointment not found
+
+    delete:
+      tags:
+        - Appointments
+      summary: Delete an appointment
+      description: Delete an appointment (patient or admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: appointment_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Appointment deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '403':
+          description: Permission denied
+        '404':
+          description: Appointment not found
+
+  /api/treatments:
+    post:
+      tags:
+        - Treatments
+      summary: Create a treatment record
+      description: Doctor-only endpoint to create a treatment record for an appointment
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TreatmentCreate'
+      responses:
+        '201':
+          description: Treatment record created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  id:
+                    type: integer
+        '400':
+          description: Cannot add treatment to completed appointment
+        '403':
+          description: Unauthorized or blacklisted
+        '404':
+          description: Appointment not found
+
+    get:
+      tags:
+        - Treatments
+      summary: Get all treatments
+      description: Retrieve treatment records (filtered by user role)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: patient_id
+          in: query
+          schema:
+            type: integer
+        - name: department
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of treatments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Treatment'
+
+  /api/treatment/{treatment_id}:
+    get:
+      tags:
+        - Treatments
+      summary: Get treatment by ID
+      description: Retrieve detailed information about a specific treatment
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: treatment_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Treatment details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Treatment'
+        '403':
+          description: Permission denied
+        '404':
+          description: Treatment record not found
+
+    put:
+      tags:
+        - Treatments
+      summary: Update a treatment record
+      description: Doctor-only endpoint to update a treatment record
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: treatment_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TreatmentCreate'
+      responses:
+        '200':
+          description: Treatment record updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '403':
+          description: Unauthorized
+        '404':
+          description: Treatment record not found
+
+    delete:
+      tags:
+        - Treatments
+      summary: Delete a treatment record
+      description: Doctor or admin endpoint to delete a treatment record
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: treatment_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Treatment record deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '403':
+          description: Unauthorized
+        '404':
+          description: Treatment record not found
+
+  /api/availabilities:
+    post:
+      tags:
+        - Availability
+      summary: Create availability slot
+      description: Doctor-only endpoint to add an availability time slot
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AvailabilityCreate'
+      responses:
+        '201':
+          description: Availability added
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  id:
+                    type: integer
+        '400':
+          description: Slot already exists or conflicts with appointments
+        '404':
+          description: Doctor not found
+
+  /api/availability/{doctor_id}:
+    get:
+      tags:
+        - Availability
+      summary: Get doctor's availability
+      description: Retrieve all availability slots for a doctor
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: doctor_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of availability slots
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DoctorAvailability'
+        '404':
+          description: Doctor not found
+
+  /api/doctor/availability/{availability_id}:
+    put:
+      tags:
+        - Availability
+      summary: Update availability slot
+      description: Doctor-only endpoint to update their own availability slot
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: availability_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AvailabilityCreate'
+      responses:
+        '200':
+          description: Availability updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '400':
+          description: Cannot update slot with booked appointments
+        '403':
+          description: Can only update own availability
+        '404':
+          description: Availability not found
+
+    delete:
+      tags:
+        - Availability
+      summary: Delete availability slot
+      description: Doctor-only endpoint to delete their own availability slot
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: availability_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Availability deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '400':
+          description: Cannot delete slot with booked appointments
+        '403':
+          description: Can only delete own availability
+        '404':
+          description: Availability not found
+
+  /api/search/doctors:
+    get:
+      tags:
+        - Search
+      summary: Search for doctors
+      description: Search doctors by name or specialization (cached for 10 minutes)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: query
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Search term
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [name, specialization]
+            default: name
+          description: Search type
+      responses:
+        '200':
+          description: List of matching doctors
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    name:
+                      type: string
+                    age:
+                      type: integer
+                    gender:
+                      type: string
+                    specialization:
+                      type: string
+                    years_of_experience:
+                      type: integer
+                    bio:
+                      type: string
+                    departments:
+                      type: array
+                      items:
+                        type: string
+        '400':
+          description: Search query is required or invalid search type
+        '404':
+          description: No doctors found
+
+  /api/search/patients:
+    get:
+      tags:
+        - Search
+      summary: Search for patients
+      description: Admin-only endpoint to search patients by name or ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: query
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Search term
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [name, id]
+            default: name
+          description: Search type
+      responses:
+        '200':
+          description: List of matching patients
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    name:
+                      type: string
+                    email:
+                      type: string
+                    contact_number:
+                      type: string
+                    age:
+                      type: integer
+                    gender:
+                      type: string
+                    blacklisted:
+                      type: boolean
+        '400':
+          description: Search query is required or invalid search type
+        '403':
+          description: Forbidden - Admin role required
+        '404':
+          description: No patients found
