@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monthly Treatment Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }
+        .container { max-width: 700px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 5px; }
+        h2 { color: #007bff; margin: 0 0 10px 0; }
+        .treatment { background: #f8f9fa; padding: 12px; margin: 15px 0; border-left: 3px solid #007bff; }
+        .row { margin: 5px 0; }
+        .label { font-weight: bold; color: #555; }
+        .footer { text-align: center; margin-top: 20px; color: #666; font-size: 14px; border-top: 1px solid #ddd; padding-top: 15px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Monthly Treatment Report</h2>
+        
+        <p><strong>Hello {{ data['name'] }}</strong></p>
+        <p>Here is your treatment summary for the last 30 days.</p>
+        <p>Email: {{ data['email'] }}</p>
+
+        {% if data['treatments'] %}
+            {% for t in data['treatments'] %}
+            <div class="treatment">
+                <div class="row"><span class="label">Treatment #{{ t['sn'] }}</span> - {{ t['department'] }}</div>
+                <div class="row"><span class="label">Doctor:</span> Dr. {{ t['consulting_doctor'] }}</div>
+                <div class="row"><span class="label">Date:</span> {{ t['appointment_date'] }} | {{ t['slot_start_time'] }} - {{ t['slot_end_time'] }}</div>
+                <div class="row"><span class="label">Status:</span> {{ t['appointment_status'] }}</div>
+                <div class="row"><span class="label">Diagnosis:</span> {{ t['diagnosis'] }}</div>
+                <div class="row"><span class="label">Prescription:</span> {{ t['prescription'] }}</div>
+                {% if t['medicines'] %}
+                <div class="row">
+                    <span class="label">Medicines:</span>
+                    {% if t['medicines'] is string %}
+                        {{ t['medicines'] }}
+                    {% else %}
+                        {% for m in t['medicines'] %}{{ m['name'] }} ({{ m['dosage'] }}, {{ m['duration_days'] }} days){% if not loop.last %}; {% endif %}{% endfor %}
+                    {% endif %}
+                </div>
+                {% endif %}
+                {% if t['next_visit_date'] != '-' %}
+                <div class="row"><span class="label">Next Visit:</span> {{ t['next_visit_date'] }}</div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        {% else %}
+            <p style="text-align: center; color: #666; padding: 20px;">No treatments found in the last 30 days.</p>
+        {% endif %}
+
+        <div class="footer">
+            <p><strong>Hospital Management System</strong></p>
+            <p>&copy; 2025 HMS. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>
