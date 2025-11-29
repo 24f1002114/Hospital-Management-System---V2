@@ -1,0 +1,17 @@
+.required {
+  color: red;
+  font-weight: bold;
+}
+.wall{
+  background: #bddddf8a;
+
+}
+.navwall{
+  background: #26d7eebf ;
+}
+.formbg{
+  background: #0df0af5e;
+}
+.login{
+  background: #39d7ecd7 ;
+}
