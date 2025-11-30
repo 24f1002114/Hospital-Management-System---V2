@@ -81,6 +81,9 @@ python3 app.py
 ```
 
 ---
+Pre-seeded Admin user created on database initialization
+Email : `admin@example.com`
+Password: `1234`
 
 ## Running the Application
 
