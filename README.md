@@ -27,7 +27,7 @@ Full-stack hospital management system with Flask backend, Vue.js frontend, featu
 
 ## Technology Stack
 
-Flask • Vue.js • Bootstrap • SQLite • SQLAlchemy • Redis • Celery • Flask-Security-Too • Flask-RESTX • MailHog
+Flask • Vue.js • Bootstrap • SQLite • SQLAlchemy • Redis • Celery • Flask-Security • Flask-RESTful • MailHog
 
 ---
 
@@ -77,7 +77,7 @@ source ~/venvs/HMS/bin/activate
 pip install -r requirements.txt
 
 # Initialize database (auto-creates admin user)
-python app.py
+python3 app.py
 ```
 
 ---
