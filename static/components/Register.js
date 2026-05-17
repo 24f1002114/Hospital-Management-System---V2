@@ -1,7 +1,7 @@
 export default {
     
     template: `
-        <div class="row justify-content-center  border d-flex align-items-center wall" style="height: 700px;"> 
+        <div class="row justify-content-center  border d-flex align-items-center wall" style="height: 700px; overflow: auto;"> 
             <div class="col-12 col-md-10 col-lg-8 border p-4 mt-2 mb-2 formbg"> 
                 <h2 class="text-center mb-4">Registration Form</h2>
                 <form @submit.prevent="addUser">

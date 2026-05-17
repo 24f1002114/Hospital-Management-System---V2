@@ -1,9 +1,12 @@
 .env/
+.env
 __pycache__/
 reference.txt
 instance/
 celerybeat-schedule
 dump.rdb
 *.pyc
-
+.venv/
+venv/
+*.csv
 

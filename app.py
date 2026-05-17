@@ -3,18 +3,30 @@ from application.cache import cache
 from application.database import db
 from application.resources import api
 from application.models import User, Role
-from application.config import LocalDevelopmentConfig
+from application.config import LocalDevelopmentConfig, ProductionConfig
 from flask_security import Security, SQLAlchemyUserDatastore
 from werkzeug.security import generate_password_hash
 from application.celery_init import celery_init_app
 from celery.schedules import crontab
 from application.task import daily_reminder, monthly_report
 from flask_cors import CORS
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def create_app():
     app = Flask(__name__)
     CORS(app)
-    app.config.from_object(LocalDevelopmentConfig)
+    env = os.getenv("ENV", "dev")
+    if env == "prod":
+        app.config.from_object(ProductionConfig)
+    else:
+        app.config.from_object(LocalDevelopmentConfig)
+
+    print("ENV:", env)
+    print("DB:", app.config.get("SQLALCHEMY_DATABASE_URI").split("/")[-1])
+
     db.init_app(app)
     cache.init_app(app)
     api.init_app(app)
@@ -22,6 +34,7 @@ def create_app():
     app.security = Security(app, datastore)
     app.app_context().push()
     return app
+
 
 app = create_app()
 celery = celery_init_app(app)

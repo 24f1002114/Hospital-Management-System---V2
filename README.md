@@ -27,7 +27,7 @@ Full-stack hospital management system with Flask backend, Vue.js frontend, featu
 
 ## Technology Stack
 
-Flask • Vue.js • Bootstrap • SQLite • SQLAlchemy • Redis • Celery • Flask-Security • Flask-RESTful • MailHog
+Flask • Vue.js • Bootstrap • SQLite • PostgreSQL • SQLAlchemy • Redis • Celery • Flask-Security • Flask-RESTful • MailHog
 
 ---
 
@@ -156,3 +156,93 @@ redis-cli -n 2 FLUSHDB
 **Celery tasks not running:** Check worker and beat terminals
 
 **Port in use:** `lsof -ti:5000 | xargs kill -9`
+
+## SQLite → PostgreSQL Migration
+
+This project uses **SQLite** locally and **PostgreSQL** in production. The database is selected automatically based on the `ENV` variable.
+
+---
+
+## 1. Install & Start PostgreSQL
+
+```bash
+sudo apt update && sudo apt install postgresql postgresql-contrib
+sudo systemctl start postgresql && sudo systemctl enable postgresql
+```
+
+---
+
+### 2. Create Database & User
+
+```bash
+sudo -u postgres psql
+```
+
+```sql
+CREATE DATABASE hospital_db;
+CREATE USER hospital_user WITH PASSWORD 'strongpassword';
+GRANT ALL PRIVILEGES ON DATABASE hospital_db TO hospital_user;
+ALTER DATABASE hospital_db OWNER TO hospital_user;
+\q
+```
+
+---
+
+### 3. Configure `.env`
+
+```env
+ENV=prod
+DATABASE_URL=postgresql://hospital_user:strongpassword@localhost:5432/hospital_db
+SECRET_KEY=your-secret-key
+```
+
+---
+
+### 4. Install Driver & Run
+
+```bash
+pip install psycopg2-binary
+python app.py
+```
+
+---
+
+### 5. Verify Tables
+
+```bash
+psql -U hospital_user -d hospital_db
+\dt
+```
+
+> Set `ENV=prod` to use PostgreSQL. Without it, the app defaults to SQLite.
+
+---
+
+### PostgreSQL Reference
+
+### Common psql Commands
+
+```sql
+\l              -- List all databases
+\c db_name      -- Connect to a database
+\dt             -- List all tables
+\d table_name   -- Describe table structure
+\q              -- Quit
+```
+
+### Useful Queries
+
+```sql
+SELECT * FROM users;
+SELECT current_database();
+SELECT current_user;
+```
+
+### Backup & Restore
+
+```bash
+pg_dump hospital_db > backup.sql
+psql hospital_db < backup.sql
+```
+
+> If `psql -U postgres` fails, use `sudo -u postgres psql` — the system may use **peer authentication**.

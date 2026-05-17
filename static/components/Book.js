@@ -1,6 +1,6 @@
 export default {
   template: `
-    <div class="row border d-flex wall" style="height: 700px;">
+    <div class="row border d-flex wall" style="height: 700px; overflow: auto;">
       <div class="col-12 border p-4" style="overflow-y: auto;">
         <div class="card shadow">
           <div class="card-header bg-primary text-white d-flex justify-content-between">
