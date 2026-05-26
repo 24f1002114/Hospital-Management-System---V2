@@ -1,41 +1,57 @@
 import smtplib
+import os
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
-from jinja2 import Template
 
-SMTP_SERVER_HOST = "localhost"
-SMTP_SERVER_PORT = 1025
-SENDER_ADDRESS = "hms@donotreply.in"
-SENDER_PASSWORD = ""
+SMTP_SERVER_HOST = os.getenv("SMTP_HOST", "sandbox.smtp.mailtrap.io")
+SMTP_SERVER_PORT = int(os.getenv("SMTP_PORT", 2525))
 
-def send_email(to_address, subject, message, content = "html", attachment_file = None):   #default content -> html
+SENDER_ADDRESS = os.getenv("SMTP_USER")
+SENDER_PASSWORD = os.getenv("SMTP_PASS")
+
+
+def send_email(to_address, subject, message, content="html", attachment_file=None):
+
     msg = MIMEMultipart()
     msg['From'] = SENDER_ADDRESS
     msg['To'] = to_address
     msg['Subject'] = subject
 
-    if content == "html":
-        msg.attach(MIMEText(message, "html"))
-    else:
-        msg.attach(MIMEText(message, "plain"))
+    # body
+    msg.attach(MIMEText(message, "html" if content == "html" else "plain"))
 
+    # attachment (optional)
     if attachment_file:
-        with open(attachment_file, 'rb') as attachment:
-            part = MIMEBase("application", "octet-stream") # Add file as application/octet-stream
-            part.set_payload(attachment.read())
+        with open(attachment_file, 'rb') as f:
+            part = MIMEBase("application", "octet-stream")
+            part.set_payload(f.read())
 
-        encoders.encode_base64(part) # email attachments are sent as base64 encoded.
-        part.add_header("Content-Disposition", f"attachment; filename = {attachment_file}") # refer https://www.ietf.org/rtc/rtc2183.txt
-        msg.attach(part) #add attachment to message
+        encoders.encode_base64(part)
 
-    s = smtplib.SMTP(host = SMTP_SERVER_HOST, port = SMTP_SERVER_PORT)
-    s.login(SENDER_ADDRESS, SENDER_PASSWORD)
-    s.send_message(msg)
-    s.quit()
+        filename = os.path.basename(attachment_file)
 
-    return True
+        part.add_header(
+            "Content-Disposition",
+            f'attachment; filename="{filename}"'
+        )
 
+        msg.attach(part)
 
+    try:
+        server = smtplib.SMTP(SMTP_SERVER_HOST, SMTP_SERVER_PORT, timeout=30)
 
+        server.ehlo()
+        server.starttls()
+        server.ehlo()
+
+        server.login(SENDER_ADDRESS, SENDER_PASSWORD)
+
+        server.send_message(msg)
+
+        server.quit()
+
+    except Exception as e:
+        print("EMAIL ERROR:", repr(e))
+        raise
