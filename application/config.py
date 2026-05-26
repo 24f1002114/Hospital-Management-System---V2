@@ -40,6 +40,7 @@ class ProductionConfig(Config):
     CACHE_REDIS_PORT = 6379
     CACHE_REDIS_DB = 2
     CACHE_DEFAULT_TIMEOUT = 300
+    CACHE_KEY_PREFIX = 'hms_cache_'
     SQLALCHEMY_ENGINE_OPTIONS = {
         "connect_args": {"options": "-ctimezone=Asia/Kolkata"}
     }

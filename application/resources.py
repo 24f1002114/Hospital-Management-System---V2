@@ -104,8 +104,17 @@ class DoctorRegistration(Resource):
     
     @auth_required('token')
     @roles_accepted('admin', 'patient', 'doctor')
-    @cache.cached(timeout=300, query_string=True) #caching data
+    #@cache.cached(timeout=300, query_string=True) #caching data
     def get(self, doctor_id=None):
+
+        if doctor_id:
+            cache_key = f'doctor_{doctor_id}'
+        else:
+            cache_key = 'doctors_all'
+        cached = cache.get(cache_key)
+        if cached:
+            return cached, 200
+    
         if doctor_id:
             doctor_profile = DoctorProfile.query.filter_by(user_id=doctor_id).first()
             if not doctor_profile:
@@ -125,6 +134,7 @@ class DoctorRegistration(Resource):
                 "blacklisted": doctor_profile.blacklisted,
                 "departments": [dept.id for dept in doctor_profile.departments]
             }
+            cache.set(cache_key, data, timeout=300)
             return data, 200
         
         all_profiles = DoctorProfile.query.all()
@@ -144,6 +154,7 @@ class DoctorRegistration(Resource):
                 "blacklisted": profile.blacklisted,
                 "departments": [dept.id for dept in profile.departments]
             })    
+        cache.set(cache_key, data, timeout=300)
         return data, 200
     
     @auth_required('token')
@@ -225,9 +236,17 @@ class DepartmentResource(Resource):
     
     @auth_required("token")
     @roles_accepted("admin", "patient")
-    @cache.cached(timeout=300, query_string=True)
+   # @cache.cached(timeout=300, query_string=True)
     def get(self, id=None):
-       
+
+        if id:
+            cache_key = f'department_{id}'
+        else:
+            cache_key = 'departments_all'
+        cached = cache.get(cache_key)
+        if cached:
+            return cached, 200
+
         if id:
             department = Department.query.get(id)
             if not department:
@@ -239,15 +258,19 @@ class DepartmentResource(Resource):
                 "description": department.description,
                 "doctors": [{"id": doc.user_id, "name": doc.name} for doc in department.doctors]
             }
+
+            cache.set(cache_key, data, timeout=200)
             return data, 200
         
         departments = Department.query.all()
-        return [{
+        data = [{
             "id": d.id,
             "name": d.name,
             "description": d.description,
             "doctors": [{"id": doc.user_id, "name": doc.name} for doc in d.doctors]
-        } for d in departments], 200
+        } for d in departments]
+        cache.set(cache_key, data, timeout=200)
+        return data, 200
 
     @auth_required("token")
     @roles_accepted("admin")
@@ -393,13 +416,14 @@ class BlacklistResource(Resource):
 
             cache.clear()
       
-            
             return {"message": "Doctor has been blacklisted"}, 200
 
         patient_profile = PatientProfile.query.filter_by(user_id=id).first()
         if patient_profile:
             patient_profile.blacklisted = True
             db.session.commit()
+
+            cache.clear()
 
             return {"message": "Patient has been blacklisted"}, 200
 
@@ -426,8 +450,8 @@ class BlacklistResource(Resource):
             patient_profile.blacklisted = False
             db.session.commit()
 
-            
-            
+            cache.clear()
+
             return {"message": "Patient has been removed from blacklist"}, 200
 
         return {"message": "User not found as doctor or patient"}, 404
@@ -1063,13 +1087,19 @@ class DoctorSearchResource(Resource):
     
     @auth_required('token')
     @roles_accepted('admin', 'patient')
-    @cache.cached(timeout=600, query_string=True) # caching data 
+    #@cache.cached(timeout=600, query_string=True) # caching data 
     def get(self):
         search_query = request.args.get('query', '').strip()
         search_type = request.args.get('type', 'name')
         
         if not search_query:
             return {"message": "Search query is required"}, 400
+        
+        # Generate a cache key based on search type and query
+        cache_key = f'doctor_search_{search_type}_{search_query}'
+        cached = cache.get(cache_key)
+        if cached:
+            return cached, 200
         
         query = DoctorProfile.query.filter_by(blacklisted=False)
         
@@ -1085,7 +1115,7 @@ class DoctorSearchResource(Resource):
         if not doctors:
             return {"message": "No doctors found"}, 404
         
-        return [{
+        data = [{
             "id": d.user.id,
             "name": d.name,
             "age": d.age,
@@ -1094,7 +1124,9 @@ class DoctorSearchResource(Resource):
             "years_of_experience": d.years_of_experience,
             "bio": d.bio,
             "departments": [dept.name for dept in d.departments]
-        } for d in doctors], 200
+        } for d in doctors]
+        cache.set(cache_key, data, timeout=600)
+        return data, 200
 
 
 class PatientSearchResource(Resource):
@@ -1126,7 +1158,7 @@ class PatientSearchResource(Resource):
         if not patients:
             return {"message": "No patients found"}, 404
         
-        return [{
+        data = [{
             "id": p.user.id,
             "name": p.name,
             "email": p.user.email,
@@ -1134,7 +1166,9 @@ class PatientSearchResource(Resource):
             "age": p.age,
             "gender": p.gender,
             "blacklisted": p.blacklisted
-        } for p in patients], 200
+        } for p in patients]
+
+        return data, 200
 
 
 # ------------------ API Routes ------------------
