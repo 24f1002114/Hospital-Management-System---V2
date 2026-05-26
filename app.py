@@ -59,15 +59,26 @@ from application.routes import *
 def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(
         #crontab(0,0, day_of_month="1"),  # monthly at midnight on the first day of the month
-        crontab(minute="*/2"),
+        crontab(0, 0, day_of_month="1"),
         monthly_report.s()     
     )
     
-    sender.add_periodic_task(
+    #sender.add_periodic_task(
         #crontab(day_of_week="*", hour=9, minute=0),  # 9 AM every day.
-        crontab(minute="*/1"),
-        daily_reminder.s()    
-    )  
+     #   crontab(hour=9, minute=0),
+      #  daily_reminder.s()    
+    #) 
+
+    sender.add_periodic_task(
+    crontab(hour=8, minute=0),   # 8 AM reminder
+    daily_reminder.s(),
+    name='daily_reminder_8am'
+    )
+    sender.add_periodic_task(
+    crontab(hour=9, minute=0),  # 9 AM reminder
+    daily_reminder.s(),
+    name='daily_reminder_9am'    
+   ) 
 
  
 

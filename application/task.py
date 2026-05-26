@@ -83,9 +83,13 @@ def csv_report(patient_id):
 
 @shared_task(ignore_result=False, name="Monthly_report")
 def monthly_report():
-    from datetime import datetime, timedelta
 
-    today = datetime.now().date()
+    from datetime import datetime, timedelta
+    import pytz
+
+    ist = pytz.timezone('Asia/Kolkata')
+    today = datetime.now(ist).date()   
+    
     last_30_days_start = today - timedelta(days=30)
 
     users_with_appointments = User.query.join(
@@ -180,8 +184,11 @@ def monthly_report():
 
 @shared_task(ignore_result=False, name="daily_reminder")
 def daily_reminder():
-    today = date.today()
+    from datetime import datetime
+    import pytz
 
+    ist = pytz.timezone('Asia/Kolkata')
+    today = datetime.now(ist).date()
     appointments = Appointment.query.join(
         DoctorAvailability,
         Appointment.slot_id == DoctorAvailability.id

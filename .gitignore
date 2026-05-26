@@ -10,4 +10,5 @@ dump.rdb
 venv/
 *.csv
 productionCheck.md
+hms/
 
