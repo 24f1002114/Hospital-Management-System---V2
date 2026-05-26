@@ -193,8 +193,11 @@ export default {
                     "Authentication-Token": localStorage.getItem("auth_token")
                 }
             })
-            .then(r => r.json())
-            .then(d => this.doctors = Array.isArray(d) ? d : []);
+            .then(r => {
+            if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return []; }
+            return r.json();
+              })
+              .then(d => this.doctors = Array.isArray(d) ? d : []);
         },
         loadPatients(){
             fetch('/api/patients', {
@@ -204,8 +207,11 @@ export default {
                     "Authentication-Token": localStorage.getItem("auth_token")
                 }
             })
-            .then(r => r.json())
-            .then(d => this.patients = Array.isArray(d) ? d : []);
+            .then(r => {
+            if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return []; }
+            return r.json();
+              })
+              .then(d => this.patients = Array.isArray(d) ? d : []);
         },
         loadAppointments(){
             fetch('/api/appointments', {
@@ -215,7 +221,11 @@ export default {
                     "Authentication-Token": localStorage.getItem("auth_token")
                 }
             })
-            .then(r => r.json())
+            .then(r => {
+            if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return []; }
+            if (r.status === 404) { return []; } 
+            return r.json();
+              })
             .then(d => this.appointments = Array.isArray(d) ? d : []);
         },
         searchDoctors() {
@@ -226,9 +236,12 @@ export default {
                   "Authentication-Token": localStorage.getItem("auth_token")
                 }
             })
-            .then(r => r.json())
-            .then(d => this.doctors = Array.isArray(d) ? d : [])
-            .catch(err => console.error("Search Error:", err));
+            .then(r => {
+            if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return []; }
+            return r.json();
+              })
+              .then(d => this.doctors = Array.isArray(d) ? d : [])
+              .catch(err => console.error("Search Error:", err));
         },
         clearDoctorSearch() {
             this.DsearchQuery = '';
@@ -243,9 +256,12 @@ export default {
                   "Authentication-Token": localStorage.getItem("auth_token")
                 }
             })
-            .then(r => r.json())
-            .then(d => this.patients = Array.isArray(d) ? d : [])
-            .catch(err => console.error("Search Error:", err));
+            .then(r => {
+            if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return []; }
+            return r.json();
+              })
+              .then(d => this.patients = Array.isArray(d) ? d : [])
+              .catch(err => console.error("Search Error:", err));
         },
         clearPatientSearch() {
             this.PsearchQuery = '';

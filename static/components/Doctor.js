@@ -93,10 +93,15 @@ export default {
           "Authentication-Token": localStorage.getItem("auth_token")
         }
       })
-        .then(r => r.json())
-        .then(data => { this.appointments = Array.isArray(data) ? data : []; })
-        .catch(() => { this.appointments = []; });
-    },
+         .then(r => {
+        if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return []; }
+        if (r.status === 404) { return []; }
+        return r.json();
+    })
+    .then(data => { this.appointments = Array.isArray(data) ? data : []; })
+    .catch(() => { this.appointments = []; });
+    
+  },
     cancelAppointment(id) {
       if (!confirm("Cancel this appointment?")) return;
       if (this.cancelling) return;

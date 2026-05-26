@@ -531,7 +531,7 @@ class AppointmentResource(Resource):
         appointments = query.order_by(Appointment.created_at.desc()).all()
         
         if not appointments:
-            return {"message": "No appointments found."}, 404
+            return [], 200
         
         result = []
         for a in appointments:
