@@ -1,4 +1,6 @@
 import os
+
+from .cache import cache
 from .database import db
 from .models import PatientProfile, User, Role
 from flask import current_app as app, jsonify, request, render_template, send_from_directory
@@ -77,6 +79,7 @@ def register_patient():
     )
     db.session.add(profile)
     db.session.commit()
+    cache.clear()
     return jsonify({"success": True, "message": "User created successfully"}), 201
 
 @app.route("/api/export", methods=["POST"])
