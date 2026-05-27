@@ -97,7 +97,9 @@ export default {
 
             <!-- Buttons -->
             <div class="d-flex gap-2 mt-3">
-              <button type="submit" class="btn btn-primary">Save</button>
+              <button type="submit" class="btn btn-primary" :disabled="saving">
+                  {{ saving ? 'Saving...' : 'Save' }}
+              </button>
               <button type="button" class="btn btn-secondary" @click="goBack">Cancel</button>
             </div>
           </form>
@@ -108,6 +110,7 @@ export default {
   `,
   data() {
     return {
+      saving: false,
       appointmentId: null,
       form: {
         visit_type: "",
@@ -131,25 +134,38 @@ export default {
       this.form.medicines.splice(index, 1);
     },
     saveHistory() {
-      authFetch('/api/treatments', {
+    const invalidMed = this.form.medicines.some(m => !m.name.trim() || !m.dosage.trim() || !m.duration_days);
+    if (invalidMed) {
+        alert('Please fill all medicine fields!');
+        return;
+    }
+    if (this.saving) return;
+    this.saving = true;
+
+    authFetch('/api/treatments', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          appointment_id: this.appointmentId,
-          ...this.form
+            appointment_id: this.appointmentId,
+            ...this.form
         })
+    })
+      .then(r => {
+          if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return; }
+          if (!r.ok) throw new Error('Failed to save');
+          return r.json();
       })
-      .then(r => r.json())
       .then(() => {
-        alert('Saved!');
-        this.goBack();
+          alert('Saved!');
+          this.goBack();
       })
       .catch(err => {
-        alert('Error: ' + err.message);
+          alert('Error: ' + err.message);
+      })
+      .finally(() => {
+          this.saving = false;
       });
-    },
+  },
     goBack() {
       this.$router.go(-1);
     }

@@ -25,14 +25,7 @@ window.authFetch = function(url, options = {}) {
         'Authentication-Token': token,
         ...options.headers
     };
-    return fetch(url, options).then(r => {
-        if (r.status === 401) {
-            localStorage.clear();
-            window.location.href = '/#/login';
-            return Promise.reject('Unauthorized');
-        }
-        return r;
-    });
+    return fetch(url, options);
 };
 
 
@@ -60,12 +53,25 @@ const router = new VueRouter({ routes })
 
 router.beforeEach((to, from, next) => {
   const authToken = localStorage.getItem('auth_token')
-  const userRoles = JSON.parse(localStorage.getItem('roles') || '[]')
+
+  let userRoles = [];
+
+  try {
+
+    userRoles = JSON.parse(localStorage.getItem('roles') || '[]')
+    
+  } catch (e) {
+
+    localStorage.clear()
+    alert('Session expired. Please log in again.')
+    next('/login')
+    return
+  }
 
   if (to.meta && to.meta.Auth) {
     if (!authToken) {
-      next('/login')
-      return
+      next('/login');
+      return;
     }
     const requiredRoles = to.meta.roles || []
     const hasRole = requiredRoles.some(role => userRoles.includes(role))

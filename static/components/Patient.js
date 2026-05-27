@@ -3,6 +3,12 @@ export default {
     <div class="row border d-flex wall" style="height: 700px; overflow: auto;"> 
       <div class="col-12 border p-4" style="overflow-y: auto;">
          <div class="card shadow p-3 bg-white"> 
+
+         <div v-if="loading" class="text-center p-5">
+            <div class="spinner-border text-primary"></div>
+            <p class="mt-2">Loading...</p>
+        </div>
+        <div v-else>
          
            <!-- Header -->
            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center mb-3">
@@ -88,13 +94,15 @@ export default {
                             <span v-else class="badge bg-secondary">{{ app.status }}</span>
                           </td>
                           <td class="text-center">
+
                             <button 
                               v-if="app.status === 'Booked'" 
                               class="btn btn-danger btn-sm" 
-                              :disabled="cancelling"
+                              :disabled="cancellingId === app.id"
                               @click="cancelAppointment(app.id)">
-                              <i class="bi bi-x-circle me-1"></i>{{ cancelling ? 'Cancelling...' : 'Cancel' }}
+                              <i class="bi bi-x-circle me-1"></i>{{ cancellingId === app.id ? 'Cancelling...' : 'Cancel' }}
                             </button>
+
                             <span v-else class="text-muted">—</span>
                           </td>
                         </tr>
@@ -107,23 +115,28 @@ export default {
                     </table>
                   </div>
                 </div>
-
+        </div>
         </div>
        </div>
       </div>
     </div>`,
     data() {
         return {
+            loading: true,
             departments: [],
             appointments: [],
-            cancelling: false,
+            cancellingId: null,
             patientName:""
         }
     },
-    mounted() {
-        this.loadDepartments();
-        this.loadAppointments();
-        this.loadPatientName();
+  async mounted() {
+    this.loading = true;
+    await Promise.all([
+        this.loadDepartments(),
+        this.loadAppointments(),
+        this.loadPatientName()
+    ]);
+        this.loading = false;
     },
     methods: {
         loadDepartments() {
@@ -133,7 +146,10 @@ export default {
                     "Content-Type": "application/json",
                 }
             })
-            .then(response => response.json())
+            .then(r => {
+                if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return; }
+                return r.json();
+            })
             .then(data => {
                 this.departments = Array.isArray(data) ? data : [];
             })
@@ -142,14 +158,15 @@ export default {
                 this.departments = [];
             });
         },
+        // FIX
         loadAppointments() {
-            return authFetch('/api/appointments', {
-                method: 'GET',
-                headers: {
-                    "Content-Type": "application/json",
-                }
+            return authFetch('/api/appointments', { method: 'GET',
+                headers: { "Content-Type": "application/json" }
             })
-            .then(response => response.json())
+            .then(r => {
+                if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return; }
+                return r.json();
+            })
             .then(data => {
                 this.appointments = Array.isArray(data) ? data : [];
             })
@@ -163,12 +180,10 @@ export default {
         },
         
         cancelAppointment(id) {
-            if (!window.confirm("Are you sure you want to cancel this appointment?")) {
-                return;
-            }
-            if (this.cancelling) return;
-            this.cancelling = true;
-            
+            if (!window.confirm("Are you sure you want to cancel this appointment?")) return;
+                if (this.cancellingId) return;   
+                this.cancellingId = id;          
+                
             authFetch(`/api/appointment/${id}`, {
                 method: 'PUT',
                 headers: {
@@ -188,7 +203,7 @@ export default {
                 alert("Error cancelling appointment");
             })
             .finally(() => {
-                this.cancelling = false;
+                this.cancellingId = null;
             });
             
         },
@@ -196,16 +211,16 @@ export default {
             const patientId = localStorage.getItem('user_id');
             this.$router.push(`/patient/history/${patientId}/All`);
         },
-        loadPatientName(){
-           authFetch(`/api/patient/${localStorage.getItem('user_id')}`, {
-                method: 'GET',
-                headers: {
-                    "Content-Type": "application/json",
-                }
-        })
-        .then(response => response.json())
-        .then(data => {this.patientName = data.name})
-
+        loadPatientName() {
+            authFetch(`/api/patient/${localStorage.getItem('user_id')}`, { method: 'GET' })
+            .then(r => {
+                if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return; }
+                return r.json();
+            })
+            .then(data => {
+                this.patientName = data?.name || 'Patient';  // ← safe fallback
+            })
+            .catch(err => console.error('Error loading name:', err));
         }
     }
 }
