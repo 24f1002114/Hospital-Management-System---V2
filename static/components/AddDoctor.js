@@ -101,11 +101,10 @@ export default{
 
     methods: {
         CreateDoctor(){
-            fetch(`/api/doctors`,{
+            authFetch(`/api/doctors`,{
                 method: 'POST',
                 headers: {
                     "content-type": "application/json",
-                    "Authentication-Token": localStorage.getItem("auth_token")
             },
             body: JSON.stringify(this.doctor)
            
@@ -124,11 +123,10 @@ export default{
             
         },
         GetDepartments(){
-            fetch('/api/departments',{
+            authFetch('/api/departments',{
                 method: 'GET',
                 headers: {
                     "content-type": "application/json",
-                    "Authentication-Token": localStorage.getItem("auth_token")
             }
             })
             .then(response => response.json())  

@@ -121,7 +121,8 @@ export default {
     "newSlot.date"(newDate) {
       if (!newDate) return;
       const dayNames = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-      const dayIndex = new Date(newDate).getDay();
+      const [year, month, day] = newDate.split('-').map(Number);
+      const dayIndex = new Date(year, month - 1, day).getDay(); 
       this.newSlot.day_of_week = dayNames[dayIndex];
     }
   },
@@ -147,19 +148,22 @@ export default {
 
   methods: {
     loadSlots() {
-      fetch('/api/availabilities', {
+      authFetch('/api/availabilities', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authentication-Token': localStorage.getItem('auth_token')
         }
       })
-      .then(r => r.json())
-      .then(data => { this.slots = data; })
-      .catch(() => {
-        alert('Failed to load availability');
-        this.slots = [];
-      });
+      
+      .then(r => {
+        if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return []; }
+        if (r.status === 403) { return []; }  // ← add this
+        return r.json();
+    })
+    .then(data => { this.slots = Array.isArray(data) ? data : []; })  // ← add Array.isArray check
+    .catch(() => { this.slots = []; });
+
+
     },
     addSlot() {
       if (!this.newSlot.day_of_week || !this.newSlot.start_time || !this.newSlot.end_time || !this.newSlot.date) {
@@ -170,29 +174,30 @@ export default {
         alert('End time must be after start time!');
         return;
       }
-      fetch('/api/availabilities', {
+      authFetch('/api/availabilities', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authentication-Token': localStorage.getItem('auth_token')
         },
         body: JSON.stringify(this.newSlot)
       })
-      .then(r => r.json())
-      .then(() => {
-        alert('Slot added successfully!');
-        this.newSlot = { date: '', day_of_week: '', start_time: '', end_time: '', is_active: true };
-        this.loadSlots();
-      })
-      .catch(() => alert('Failed to add slot'));
+      
+   .then(async r => {
+    if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return; }
+    const body = await r.json();
+    if (!r.ok) { alert(body.message || 'Failed to add slot'); return; }
+    alert('Slot added successfully!');
+    this.newSlot = { date: '', day_of_week: '', start_time: '', end_time: '', is_active: true };
+    this.loadSlots();
+  })
+.catch(() => alert('Failed to add slot'));
     },
     deleteSlot(id) {
       if (!confirm('Are you sure you want to delete this slot?')) return;
-      fetch(`/api/doctor/availability/${id}`, {
+      authFetch(`/api/doctor/availability/${id}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-          'Authentication-Token': localStorage.getItem('auth_token')
         }
       })
       .then(r => r.json())

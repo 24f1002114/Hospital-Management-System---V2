@@ -127,11 +127,10 @@ export default {
     },
     methods: {
         loadDepartments() {
-            fetch('/api/departments', {
+            authFetch('/api/departments', {
                 method: 'GET',
                 headers: {
                     "Content-Type": "application/json",
-                    "Authentication-Token": localStorage.getItem("auth_token")
                 }
             })
             .then(response => response.json())
@@ -144,11 +143,10 @@ export default {
             });
         },
         loadAppointments() {
-            return fetch('/api/appointments', {
+            return authFetch('/api/appointments', {
                 method: 'GET',
                 headers: {
                     "Content-Type": "application/json",
-                    "Authentication-Token": localStorage.getItem("auth_token")
                 }
             })
             .then(response => response.json())
@@ -171,11 +169,10 @@ export default {
             if (this.cancelling) return;
             this.cancelling = true;
             
-            fetch(`/api/appointment/${id}`, {
+            authFetch(`/api/appointment/${id}`, {
                 method: 'PUT',
                 headers: {
                     "Content-Type": "application/json",
-                    "Authentication-Token": localStorage.getItem("auth_token")
                 },
                 body: JSON.stringify({ status: 'Cancelled' })
             })
@@ -200,11 +197,10 @@ export default {
             this.$router.push(`/patient/history/${patientId}/All`);
         },
         loadPatientName(){
-           fetch(`/api/patient/${localStorage.getItem('user_id')}`, {
+           authFetch(`/api/patient/${localStorage.getItem('user_id')}`, {
                 method: 'GET',
                 headers: {
                     "Content-Type": "application/json",
-                    "Authentication-Token": localStorage.getItem("auth_token")
                 }
         })
         .then(response => response.json())

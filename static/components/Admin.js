@@ -186,11 +186,10 @@ export default {
     },
     methods: {
         loadDoctors(){
-            fetch('/api/doctors', {
+            authFetch('/api/doctors', {
                 method: 'GET',
                 headers: {
                     "Content-Type": "application/json",
-                    "Authentication-Token": localStorage.getItem("auth_token")
                 }
             })
             .then(r => {
@@ -200,11 +199,10 @@ export default {
               .then(d => this.doctors = Array.isArray(d) ? d : []);
         },
         loadPatients(){
-            fetch('/api/patients', {
+            authFetch('/api/patients', {
                 method: 'GET',
                 headers: {
                     "Content-Type": "application/json",
-                    "Authentication-Token": localStorage.getItem("auth_token")
                 }
             })
             .then(r => {
@@ -214,11 +212,10 @@ export default {
               .then(d => this.patients = Array.isArray(d) ? d : []);
         },
         loadAppointments(){
-            fetch('/api/appointments', {
+            authFetch('/api/appointments', {
                 method: 'GET',
                 headers: {
                     "Content-Type": "application/json",
-                    "Authentication-Token": localStorage.getItem("auth_token")
                 }
             })
             .then(r => {
@@ -229,11 +226,10 @@ export default {
             .then(d => this.appointments = Array.isArray(d) ? d : []);
         },
         searchDoctors() {
-            fetch(`/api/search/doctors?query=${this.DsearchQuery}&type=${this.DsearchType}`, {
+            authFetch(`/api/search/doctors?query=${this.DsearchQuery}&type=${this.DsearchType}`, {
                 method: 'GET',
                 headers: {
                   "Content-Type": "application/json",
-                  "Authentication-Token": localStorage.getItem("auth_token")
                 }
             })
             .then(r => {
@@ -249,11 +245,10 @@ export default {
             this.loadDoctors();
         },
         searchPatients() {
-            fetch(`/api/search/patients?query=${this.PsearchQuery}&type=${this.PsearchType}`, {
+            authFetch(`/api/search/patients?query=${this.PsearchQuery}&type=${this.PsearchType}`, {
                 method: 'GET',
                 headers: {
                   "Content-Type": "application/json",
-                  "Authentication-Token": localStorage.getItem("auth_token")
                 }
             })
             .then(r => {
@@ -273,11 +268,10 @@ export default {
         },
         DeleteDoctor(user_id){
           if (!confirm("Are you sure you want to delete this doctor?")) return;
-          fetch(`/api/doctor/${user_id}`, {
+          authFetch(`/api/doctor/${user_id}`, {
               method: 'DELETE',
               headers: {
                   "Content-Type": "application/json",
-                  "Authentication-Token": localStorage.getItem("auth_token")
               }
           })
           .then(r => r.json())
@@ -292,11 +286,10 @@ export default {
         },
         DeletePatient(user_id){
           if (!confirm("Are you sure you want to delete this patient?")) return;
-          fetch(`/api/patient/${user_id}`, {
+          authFetch(`/api/patient/${user_id}`, {
               method: 'DELETE',
               headers: {
                   "Content-Type": "application/json",
-                  "Authentication-Token": localStorage.getItem("auth_token")
               }
           })
           .then(r => r.json())
@@ -307,11 +300,10 @@ export default {
           .catch(err => console.error("Delete Patient Error:", err));
         },
         Blacklist(user_id){
-            fetch(`/api/user/${user_id}/blacklist`, {
+            authFetch(`/api/user/${user_id}/blacklist`, {
                 method: 'POST',
                 headers: {
                     "Content-Type": "application/json",
-                    "Authentication-Token": localStorage.getItem("auth_token")
                 },
                 body: JSON.stringify({ user_id })
             })
@@ -324,11 +316,10 @@ export default {
             .catch(err => console.error("Blacklist Error:", err));
         },
         RemoveBlacklist(user_id){
-            fetch(`/api/user/${user_id}/blacklist`, {
+            authFetch(`/api/user/${user_id}/blacklist`, {
                 method: 'DELETE',
                 headers: {
                     "Content-Type": "application/json",
-                    "Authentication-Token": localStorage.getItem("auth_token")
                 },
                 body: JSON.stringify({ user_id })
             })

@@ -131,11 +131,10 @@ export default {
       this.form.medicines.splice(index, 1);
     },
     saveHistory() {
-      fetch('/api/treatments', {
+      authFetch('/api/treatments', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authentication-Token': localStorage.getItem('auth_token')
         },
         body: JSON.stringify({
           appointment_id: this.appointmentId,

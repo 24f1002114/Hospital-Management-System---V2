@@ -102,10 +102,9 @@ export default {
   methods: {
     loadDepartmentDetails(id) {
       this.loading = true;
-      fetch(`/api/department/${id}`, {
+      authFetch(`/api/department/${id}`, {
         headers: { 
           'Content-Type': 'application/json',
-          'Authentication-Token': localStorage.getItem('auth_token') 
         }
       })
         .then(res => {

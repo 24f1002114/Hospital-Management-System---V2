@@ -376,6 +376,7 @@ class PatientResource(Resource):
             profile.medical_history = data.get('medical_history', profile.medical_history)
             
             db.session.commit()
+            cache.clear()
             return {"message": "Patient profile updated successfully"}, 200
         else:
             return {"message": "Permission denied"}, 403
@@ -1113,7 +1114,7 @@ class DoctorSearchResource(Resource):
         doctors = query.all()
         
         if not doctors:
-            return {"message": "No doctors found"}, 404
+            return [], 200
         
         data = [{
             "id": d.user.id,
@@ -1156,7 +1157,7 @@ class PatientSearchResource(Resource):
         patients = query.all()
         
         if not patients:
-            return {"message": "No patients found"}, 404
+            return [], 200
         
         data = [{
             "id": p.user.id,
@@ -1179,7 +1180,7 @@ api.add_resource(BlacklistResource, '/api/user/<int:id>/blacklist')
 api.add_resource(DepartmentResource, "/api/departments", "/api/department/<int:id>")
 api.add_resource(AppointmentResource, "/api/appointments", "/api/appointment/<int:appointment_id>")
 api.add_resource(TreatmentResource, "/api/treatments", "/api/treatment/<int:treatment_id>")
-api.add_resource(AvailabilityResource, "/api/availabilities", "/api/availability/<int:doctor_id>", "/api/doctor/availability/<int:availability_id>")
+api.add_resource(AvailabilityResource, "/api/availabilities", "/api/availabilities/<int:doctor_id>", "/api/doctor/availability/<int:availability_id>")
 api.add_resource(DoctorSearchResource, "/api/search/doctors")
 api.add_resource(PatientSearchResource, "/api/search/patients")
 

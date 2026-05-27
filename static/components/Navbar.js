@@ -111,16 +111,14 @@ template: `
   
 csvexport() {
   const token = localStorage.getItem('auth_token');
-  fetch('/api/export', {
+  authFetch('/api/export', {
     method: 'POST',
-    headers: { 'Authentication-Token': token }
   })
     .then(res => res.json())
     .then(data => {
       const taskId = data.id;
       const timer = setInterval(async () => {
-        const r = await fetch(`/api/csv_result/${taskId}`, {
-          headers: { 'Authentication-Token': token }
+        const r = await authFetch(`/api/csv_result/${taskId}`, {
         });
         if (r.status === 202) return;
         clearInterval(timer);

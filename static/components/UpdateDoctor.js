@@ -110,11 +110,10 @@ export default{
         },
 
         FetchDoctorData(id){
-            fetch(`/api/doctor/${id}`, {
+            authFetch(`/api/doctor/${id}`, {
                 method: 'GET',
                 headers: {
                     "content-type": "application/json",
-                    "Authentication-Token": localStorage.getItem("auth_token")
                 }
             })
             .then(response => response.json())
@@ -125,11 +124,10 @@ export default{
         },
 
         SaveDoctor(){
-            fetch(`/api/doctor/${this.doctorId}`, {
+            authFetch(`/api/doctor/${this.doctorId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
-                    "Authentication-Token": localStorage.getItem("auth_token")
                 },
                 body: JSON.stringify(this.doctor)
             })
@@ -144,11 +142,10 @@ export default{
         },
 
         loadDepartments(){
-            fetch('/api/departments', {
+            authFetch('/api/departments', {
                 method: 'GET',
                 headers: {
                     "Content-Type": "application/json",
-                    "Authentication-Token": localStorage.getItem("auth_token")
                 }
             })
             .then(response => response.json())

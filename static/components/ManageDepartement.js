@@ -112,12 +112,11 @@ export default {
     headers() {
       return {
         'Content-Type': 'application/json',
-        'Authentication-Token': localStorage.getItem('auth_token')
       };
     },
     loadDepartments() {
       this.loading = true;
-      fetch('/api/departments', { headers: this.headers() })
+      authFetch('/api/departments', { headers: this.headers() })
         .then(r => r.json())
         .then(list => {
           this.departments = Array.isArray(list) ? list.map(d => ({ ...d, _edit: false })) : [];
@@ -134,7 +133,7 @@ export default {
         return;
       }
       this.adding = true;
-      fetch('/api/departments', {
+      authFetch('/api/departments', {
         method: 'POST',
         headers: this.headers(),
         body: JSON.stringify({
@@ -171,7 +170,7 @@ export default {
         return;
       }
 
-      fetch(`/api/department/${d.id}`, {
+      authFetch(`/api/department/${d.id}`, {
         method: 'PUT',
         headers: this.headers(),
         body: JSON.stringify(payload)
@@ -188,7 +187,7 @@ export default {
     deleteDepartment(id) {
       if (!confirm('Delete this department?')) return;
       this.deletingId = id;
-      fetch(`/api/department/${id}`, {
+      authFetch(`/api/department/${id}`, {
         method: 'DELETE',
         headers: this.headers()
       })

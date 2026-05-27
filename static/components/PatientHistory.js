@@ -128,11 +128,10 @@ export default {
       // Build query params for filtering by patient
       const params = new URLSearchParams();
       
-      fetch(`/api/treatments?${params.toString()}`, {
+      authFetch(`/api/treatments?${params.toString()}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authentication-Token': localStorage.getItem('auth_token')
         }
       })
         .then(response => {
@@ -180,11 +179,10 @@ export default {
     loadPatientInfo() {
       const targetPatientId = parseInt(this.patientId) || parseInt(localStorage.getItem('user_id'));
       
-      fetch(`/api/patient/${targetPatientId}`, {
+      authFetch(`/api/patient/${targetPatientId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authentication-Token': localStorage.getItem('auth_token')
         }
       })
         .then(response => response.json())

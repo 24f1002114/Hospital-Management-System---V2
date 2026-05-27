@@ -44,6 +44,7 @@ export default {
                     localStorage.setItem('username', data.username);
                     localStorage.setItem('auth_token', data.auth_token);
                     localStorage.setItem('roles', JSON.stringify(data.roles));
+                this.$nextTick(() => {
                     if(data.roles.includes("admin")){
                         this.$router.push('/admin');
                     } else if(data.roles.includes("doctor")){
@@ -52,14 +53,16 @@ export default {
                         this.$router.push('/patient');
                     } else {
                         alert("Unknown role!");
-                    }
+                    } 
+                }); 
                 } else {
                     alert("Login failed: " + data.message);
                 }
             }).catch(error => {
                 console.error('Error:', error);
                 alert("An error occurred during login. Please try again.");
-            });   
+            }); 
+              
         }
     }
 }

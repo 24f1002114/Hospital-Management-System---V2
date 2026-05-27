@@ -74,11 +74,10 @@ export default{
     methods: {
 
         FetchPatientData(id){
-            fetch(`/api/patient/${id}`, {
+            authFetch(`/api/patient/${id}`, {
                 method: "GET",
                 headers: {
                     'content-type': 'application/json',
-                    "Authentication-Token": localStorage.getItem("auth_token")
                 }
             })
             .then(response => response.json())
@@ -90,11 +89,10 @@ export default{
         },
 
         SavePatient(){
-            fetch(`/api/patient/${this.patientId}`, {
+            authFetch(`/api/patient/${this.patientId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json', 
-                    "Authentication-Token": localStorage.getItem("auth_token")
                 },
                 body: JSON.stringify(this.patient)  
                 })

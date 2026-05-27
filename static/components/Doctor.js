@@ -86,11 +86,10 @@ export default {
       this.$router.push({ path: `/create/availability/${id}` });
     },
     loadAppointments() {
-      fetch('/api/appointments', {
+      authFetch('/api/appointments', {
         method: 'GET',
         headers: {
           "Content-Type": "application/json",
-          "Authentication-Token": localStorage.getItem("auth_token")
         }
       })
          .then(r => {
@@ -106,11 +105,10 @@ export default {
       if (!confirm("Cancel this appointment?")) return;
       if (this.cancelling) return;
       this.cancelling = true;
-      fetch(`/api/appointment/${id}`, {
+      authFetch(`/api/appointment/${id}`, {
         method: 'PUT',
         headers: {
           "Content-Type": "application/json",
-          "Authentication-Token": localStorage.getItem("auth_token")
         },
         body: JSON.stringify({ status: 'Cancelled' })
       })
@@ -134,11 +132,10 @@ export default {
         this.doctorName = "";
         return;
       }
-      fetch(`/api/doctor/${doctorId}`, {
+      authFetch(`/api/doctor/${doctorId}`, {
         method: 'GET',
         headers: {
           "Content-Type": "application/json",
-          "Authentication-Token": localStorage.getItem("auth_token")
         }
       })
       .then(r => {

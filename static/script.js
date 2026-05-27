@@ -17,6 +17,26 @@ import PatientHistory from './components/PatientHistory.js'
 import DoctorProfile from './components/DoctorProfile.js'
 import ManageDepartement from './components/ManageDepartement.js'
 
+// Global auth fetch helper
+window.authFetch = function(url, options = {}) {
+    const token = localStorage.getItem('auth_token');
+    options.headers = {
+        'Content-Type': 'application/json',
+        'Authentication-Token': token,
+        ...options.headers
+    };
+    return fetch(url, options).then(r => {
+        if (r.status === 401) {
+            localStorage.clear();
+            window.location.href = '/#/login';
+            return Promise.reject('Unauthorized');
+        }
+        return r;
+    });
+};
+
+
+
 const routes = [
   { path: '/', component: Home },
   { path: '/login', component: Login },

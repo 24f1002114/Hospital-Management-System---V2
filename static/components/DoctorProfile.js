@@ -77,10 +77,9 @@ export default {
    loadDoctor() {
   this.loading = true;
   
-  fetch(`/api/doctor/${this.doctorId}`, {
+  authFetch(`/api/doctor/${this.doctorId}`, {
     headers: {
       'Content-Type': 'application/json',
-      'Authentication-Token': localStorage.getItem('auth_token')
     }
   })
     .then(response => {
@@ -114,10 +113,9 @@ goAvailability() {
   
   const deptId = this.doctor.departments[0];
   
-  fetch(`/api/department/${deptId}`, {
+  authFetch(`/api/department/${deptId}`, {
     headers: {
       'Content-Type': 'application/json',
-      'Authentication-Token': localStorage.getItem('auth_token')
     }
   })
     .then(res => {

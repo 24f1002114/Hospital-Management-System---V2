@@ -116,11 +116,10 @@ export default {
   },
   methods: {
     loadSlots(doctorId) {
-      return fetch(`/api/availability/${doctorId}`, {
+      return authFetch(`/api/availability/${doctorId}`, {
         method: 'GET',
         headers: {
           "Content-Type": "application/json",
-          "Authentication-Token": localStorage.getItem("auth_token")
         }
       })
       .then(r => r.json())
@@ -128,11 +127,10 @@ export default {
       .catch(() => { this.slots = []; });
     },
     loadAppointments() {
-      return fetch('/api/appointments', {
+      return authFetch('/api/appointments', {
         method: 'GET',
         headers: {
           "Content-Type": "application/json",
-          "Authentication-Token": localStorage.getItem("auth_token")
         }
       })
       .then(r => r.json())
@@ -140,11 +138,10 @@ export default {
       .catch(() => { this.appointments = []; });
     },
     loadDoctorAppointments() {
-      return fetch(`/api/appointments?doctor_id=${this.doctorId}`, {
+      return authFetch(`/api/appointments?doctor_id=${this.doctorId}`, {
         method: 'GET',
         headers: {
           "Content-Type": "application/json",
-          "Authentication-Token": localStorage.getItem("auth_token")
         }
       })
       .then(r => r.json())
@@ -175,11 +172,10 @@ export default {
       if (this.processing) return;
       this.processing = true;
       const payload = { doctor_id: this.doctorId, department: this.departmentName, slot_id: slotId };
-      fetch(`/api/appointments`, {
+      authFetch(`/api/appointments`, {
         method: 'POST',
         headers: {
           "Content-Type": "application/json",
-          "Authentication-Token": localStorage.getItem("auth_token")
         },
         body: JSON.stringify(payload)
       })
@@ -200,11 +196,10 @@ export default {
       if (!confirm("Are you sure you want to delete this appointment?")) return;
       if (this.processing) return;
       this.processing = true;
-      fetch(`/api/appointment/${appointmentId}`, {
+      authFetch(`/api/appointment/${appointmentId}`, {
         method: 'DELETE',
         headers: {
           "Content-Type": "application/json",
-          "Authentication-Token": localStorage.getItem("auth_token")
         }
       })
       .then(response => {
