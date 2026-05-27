@@ -1,6 +1,6 @@
 import os
 
-from .cache import cache
+#from .cache import cache
 from .database import db
 from .models import PatientProfile, User, Role
 from flask import current_app as app, jsonify, request, render_template, send_from_directory
@@ -79,7 +79,7 @@ def register_patient():
     )
     db.session.add(profile)
     db.session.commit()
-    cache.clear()
+    #cache.clear()
     return jsonify({"success": True, "message": "User created successfully"}), 201
 
 @app.route("/api/export", methods=["POST"])
@@ -113,7 +113,13 @@ def csv_result(task_id):
     if not os.path.exists(filepath):
         return jsonify({"error": "file not found", "filename": filename}), 404
 
-    return send_from_directory(directory, filename, as_attachment=True)
-
+    response = send_from_directory(directory, filename, as_attachment=True)  
+    
+    try:                        
+        os.remove(filepath)    
+    except OSError:             
+        pass                    
+    
+    return response 
 
 

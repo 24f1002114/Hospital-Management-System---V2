@@ -7,7 +7,7 @@ from application.task import daily_reminder
 from .models import DoctorProfile, Medicine, PatientProfile, User, db, Appointment, Treatment, Department, DoctorAvailability
 from werkzeug.security import generate_password_hash
 from datetime import datetime
-from application.cache import cache 
+#from application.cache import cache 
 
 api = Api()
 
@@ -98,7 +98,7 @@ class DoctorRegistration(Resource):
             department.doctors.append(profile)
         db.session.commit()
 
-        cache.clear()
+        #cache.clear()
         
         return {"message": "Doctor registered successfully", "id": doctor_user.id}, 201
     
@@ -106,7 +106,7 @@ class DoctorRegistration(Resource):
     @roles_accepted('admin', 'patient', 'doctor')
     #@cache.cached(timeout=300, query_string=True) #caching data
     def get(self, doctor_id=None):
-
+        """
         if doctor_id:
             cache_key = f'doctor_{doctor_id}'
         else:
@@ -114,7 +114,7 @@ class DoctorRegistration(Resource):
         cached = cache.get(cache_key)
         if cached:
             return cached, 200
-    
+        """
         if doctor_id:
             doctor_profile = DoctorProfile.query.filter_by(user_id=doctor_id).first()
             if not doctor_profile:
@@ -134,7 +134,7 @@ class DoctorRegistration(Resource):
                 "blacklisted": doctor_profile.blacklisted,
                 "departments": [dept.id for dept in doctor_profile.departments]
             }
-            cache.set(cache_key, data, timeout=300)
+            #cache.set(cache_key, data, timeout=300)
             return data, 200
         
         all_profiles = DoctorProfile.query.all()
@@ -154,7 +154,7 @@ class DoctorRegistration(Resource):
                 "blacklisted": profile.blacklisted,
                 "departments": [dept.id for dept in profile.departments]
             })    
-        cache.set(cache_key, data, timeout=300)
+        #cache.set(cache_key, data, timeout=300)
         return data, 200
     
     @auth_required('token')
@@ -186,7 +186,7 @@ class DoctorRegistration(Resource):
             
         db.session.commit()
 
-        cache.clear()
+        #cache.clear()
 
         return {"message": "Doctor updated successfully"}, 200
 
@@ -211,7 +211,7 @@ class DoctorRegistration(Resource):
         db.session.delete(user)
         db.session.commit()
 
-        cache.clear()
+        #cache.clear()
 
         return {"message": "Doctor deleted successfully"}, 200
 
@@ -230,7 +230,7 @@ class DepartmentResource(Resource):
         db.session.add(department)
         db.session.commit()
 
-        cache.clear()
+        #cache.clear()
 
         return {"message": "Department created", "id": department.id}, 201
     
@@ -238,7 +238,7 @@ class DepartmentResource(Resource):
     @roles_accepted("admin", "patient")
    # @cache.cached(timeout=300, query_string=True)
     def get(self, id=None):
-
+        """ 
         if id:
             cache_key = f'department_{id}'
         else:
@@ -246,6 +246,7 @@ class DepartmentResource(Resource):
         cached = cache.get(cache_key)
         if cached:
             return cached, 200
+            """
 
         if id:
             department = Department.query.get(id)
@@ -259,7 +260,7 @@ class DepartmentResource(Resource):
                 "doctors": [{"id": doc.user_id, "name": doc.name} for doc in department.doctors]
             }
 
-            cache.set(cache_key, data, timeout=200)
+            #cache.set(cache_key, data, timeout=200)
             return data, 200
         
         departments = Department.query.all()
@@ -269,7 +270,7 @@ class DepartmentResource(Resource):
             "description": d.description,
             "doctors": [{"id": doc.user_id, "name": doc.name} for doc in d.doctors]
         } for d in departments]
-        cache.set(cache_key, data, timeout=200)
+        #cache.set(cache_key, data, timeout=200)
         return data, 200
 
     @auth_required("token")
@@ -292,7 +293,7 @@ class DepartmentResource(Resource):
             
         db.session.commit()
 
-        cache.clear()
+        #cache.clear()
 
         return {"message": "Department updated successfully"}, 200
     
@@ -306,8 +307,8 @@ class DepartmentResource(Resource):
         db.session.delete(department)
         db.session.commit()
 
-        cache.clear()
-        
+        #cache.clear()
+
         return {"message": "Department deleted successfully"}, 200
 
 
@@ -338,7 +339,7 @@ class PatientResource(Resource):
             else:
                 return {"message": "Permission denied"}, 403
 
-        if current_user.has_role('patient'):
+        if not current_user.has_role('admin'):
             return {"message": "Permission denied"}, 403
             
         all_profiles = PatientProfile.query.join(User).all()
@@ -376,7 +377,7 @@ class PatientResource(Resource):
             profile.medical_history = data.get('medical_history', profile.medical_history)
             
             db.session.commit()
-            cache.clear()
+            #cache.clear()
             return {"message": "Patient profile updated successfully"}, 200
         else:
             return {"message": "Permission denied"}, 403
@@ -415,7 +416,7 @@ class BlacklistResource(Resource):
             doctor_profile.blacklisted = True
             db.session.commit()
 
-            cache.clear()
+            #cache.clear()
       
             return {"message": "Doctor has been blacklisted"}, 200
 
@@ -424,7 +425,7 @@ class BlacklistResource(Resource):
             patient_profile.blacklisted = True
             db.session.commit()
 
-            cache.clear()
+            #cache.clear()
 
             return {"message": "Patient has been blacklisted"}, 200
 
@@ -441,7 +442,7 @@ class BlacklistResource(Resource):
             doctor_profile.blacklisted = False
             db.session.commit()
 
-            cache.clear()
+            #cache.clear()
            
             
             return {"message": "Doctor has been removed from blacklist"}, 200
@@ -451,7 +452,7 @@ class BlacklistResource(Resource):
             patient_profile.blacklisted = False
             db.session.commit()
 
-            cache.clear()
+            #cache.clear()
 
             return {"message": "Patient has been removed from blacklist"}, 200
 
@@ -1095,13 +1096,13 @@ class DoctorSearchResource(Resource):
         
         if not search_query:
             return {"message": "Search query is required"}, 400
-        
+        """
         # Generate a cache key based on search type and query
         cache_key = f'doctor_search_{search_type}_{search_query}'
         cached = cache.get(cache_key)
         if cached:
             return cached, 200
-        
+        """
         query = DoctorProfile.query.filter_by(blacklisted=False)
         
         if search_type == 'name':
@@ -1126,7 +1127,7 @@ class DoctorSearchResource(Resource):
             "bio": d.bio,
             "departments": [dept.name for dept in d.departments]
         } for d in doctors]
-        cache.set(cache_key, data, timeout=600)
+        #cache.set(cache_key, data, timeout=600)
         return data, 200
 
 
