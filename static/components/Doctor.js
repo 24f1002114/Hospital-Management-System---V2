@@ -3,6 +3,12 @@ export default {
   <div class="row wall border d-flex" style="height: 700px; overflow: auto;">
     <div class="col-12 p-4 border" style="overflow-y: auto;">
       <div class="card shadow p-3 bg-white">
+
+      <div v-if="loading" class="text-center p-5">
+          <div class="spinner-border text-primary"></div>
+          <p class="mt-2">Loading...</p>
+      </div>
+      <div v-else>
         <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center mb-3">
           <h5 class="mb-0"><i class="bi bi-person-badge me-2"></i>Dr. {{ doctorName }}</h5>
           <button class="btn btn-light btn-sm" @click="createAvailability">
@@ -49,8 +55,8 @@ export default {
                       <button class="btn btn-secondary btn-sm" @click="loadPatientHistory(app.patient_id, app.department)">
                         <i class="bi bi-clock-history me-1"></i>View History
                       </button>
-                      <button v-if="app.status === 'Booked'" class="btn btn-danger btn-sm" :disabled="cancelling" @click="cancelAppointment(app.id)">
-                        <i class="bi bi-x-circle me-1"></i>{{ cancelling ? 'Cancelling...' : 'Cancel' }}
+                      <button v-if="app.status === 'Booked'" class="btn btn-danger btn-sm" :disabled="cancellingId === app.id" @click="cancelAppointment(app.id)">
+                        <i class="bi bi-x-circle me-1"></i>{{ cancellingId === app.id ? 'Cancelling...' : 'Cancel' }}
                       </button>
                     </div>
                   </td>
@@ -63,6 +69,7 @@ export default {
               </tbody>
             </table>
           </div>
+          </div>
 
         </div>
       </div>
@@ -71,14 +78,19 @@ export default {
   `,
   data() {
     return {
+      loading: true,
       appointments: [],
-      cancelling: false,
+      cancellingId: null,
       doctorName: ""
     };
   },
-  mounted() {
-    this.loadAppointments();
-    this.loadDoctorName();
+  async mounted() {
+    this.loading = true;
+    await Promise.all([
+        this.loadAppointments(),
+        this.loadDoctorName()
+    ]);
+    this.loading = false;
   },
   methods: {
     createAvailability() {
@@ -103,8 +115,8 @@ export default {
   },
     cancelAppointment(id) {
       if (!confirm("Cancel this appointment?")) return;
-      if (this.cancelling) return;
-      this.cancelling = true;
+      if (this.cancellingId) return;
+      this.cancellingId = id;
       authFetch(`/api/appointment/${id}`, {
         method: 'PUT',
         headers: {
@@ -118,7 +130,7 @@ export default {
           return this.loadAppointments();
         })
         .catch(() => alert("Error cancelling"))
-        .finally(() => { this.cancelling = false; });
+        .finally(() => { this.cancellingId = null; });
     },
     loadPatientHistory(patientId, department) {
       this.$router.push({ path: `/patient/history/${patientId}/${department}` });
@@ -139,9 +151,10 @@ export default {
         }
       })
       .then(r => {
-        if (!r.ok) throw new Error('Failed to fetch doctor');
-        return r.json();
-      })
+            if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return; }
+            if (!r.ok) throw new Error('Failed to fetch doctor');
+            return r.json();
+        })
       .then(data => {
         this.doctorName = data.name || `${data.first_name || ''} ${data.last_name || ''}`.trim();
       })

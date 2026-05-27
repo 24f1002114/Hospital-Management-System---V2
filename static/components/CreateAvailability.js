@@ -4,6 +4,11 @@ export default {
       <div class="col-12  p-4 border" style="overflow-y: auto;">
 
         <div class="card shadow">
+        <div v-if="loading" class="text-center p-5">
+            <div class="spinner-border text-success"></div>
+            <p class="mt-2">Loading...</p>
+        </div>
+        <div v-else>
           
           <!-- Header -->
           <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
@@ -97,6 +102,7 @@ export default {
                 </table>
               </div>
             </div>
+            </div>
 
           </div>
         </div>
@@ -106,6 +112,7 @@ export default {
 
   data() {
     return {
+      loading: true, 
       slots: [],
       newSlot: {
         date: '',
@@ -142,13 +149,15 @@ export default {
     }
   },
 
-  created() {
-    this.loadSlots();
-  },
+  async mounted() {
+    this.loading = true;
+    await this.loadSlots();
+    this.loading = false;
+},
 
   methods: {
     loadSlots() {
-      authFetch('/api/availabilities', {
+      return authFetch('/api/availabilities', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -200,7 +209,10 @@ export default {
           'Content-Type': 'application/json',
         }
       })
-      .then(r => r.json())
+      .then(r => {
+            if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return; }
+            return r.json();
+        })
       .then(() => {
         alert('Slot deleted successfully!');
         this.loadSlots();

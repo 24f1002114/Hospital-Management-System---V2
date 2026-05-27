@@ -4,8 +4,14 @@ export default {
       <div class="col-12  p-4 border" style="overflow-y: auto;">
         <div class="card shadow p-3 bg-white"> 
           <div class="card-body">
+          <div v-if="loading" class="text-center p-5">
+            <div class="spinner-border text-primary"></div>
+            <p class="mt-2">Loading...</p>
+        </div>
+        <div v-else>
 
           <!-- Registered Doctors -->
+
           <div class="container-fluid">
            <div class="d-flex justify-content-between align-items-center mb-3">
               <div class="col-3 d-flex justify-content-start align-items-center gap-2">
@@ -40,7 +46,9 @@ export default {
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="(doc, index) in doctors" :key="doc.id" v-if="doc.id">
+
+                  <tr v-for="(doc, index) in doctors" :key="doc.id">
+                  <template v-if="doc.id">
                     <td>{{ index + 1 }}</td>
                     <td>Dr. {{ doc.name }}</td>
                     <td>
@@ -49,7 +57,9 @@ export default {
                       <button v-if="!doc.blacklisted" class="btn btn-warning btn-sm" @click="Blacklist(doc.id)">Blacklist</button>
                       <button v-if="doc.blacklisted" class="btn btn-secondary btn-sm" @click="RemoveBlacklist(doc.id)">Blacklisted</button>
                     </td>
+                     </template>
                   </tr>
+
                   <tr v-if="doctors.length === 0">
                     <td colspan="3" class="text-center">No Doctors Found : Given Specialization or Name not matched.</td>
                   </tr>  
@@ -89,16 +99,20 @@ export default {
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="(pat, index) in patients" :key="pat.id" v-if="pat.id"> 
-                    <td>{{ index + 1 }}</td>
-                    <td>Mr. {{ pat.name }}</td>
-                    <td>
+
+                  <tr v-for="(pat, index) in patients" :key="pat.id"> 
+                    <template v-if="pat.id">
+                      <td>{{ index + 1 }}</td>
+                      <td>Mr. {{ pat.name }}</td>
+                      <td>
                       <button class="btn btn-primary btn-sm me-2" @click="GetUpdatePatient(pat.id)">View/Edit</button>
                       <button class="btn btn-danger btn-sm me-2" @click="DeletePatient(pat.id)">Delete</button>
                       <button v-if="!pat.blacklisted" class="btn btn-warning btn-sm" @click="Blacklist(pat.id)">Blacklist</button>
                       <button v-if="pat.blacklisted" class="btn btn-secondary btn-sm" @click="RemoveBlacklist(pat.id)">Blacklisted</button>
-                    </td>
+                     </td>
+                     </template>
                   </tr>
+
                   <tr v-if="patients.length === 0">
                     <td colspan="3" class="text-center">No Patients Found : Given ID or Name not matched.</td>
                   </tr>
@@ -132,7 +146,9 @@ export default {
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="(app, index) in appointments" :key="app.id" v-if="app.id">
+                
+                  <tr v-for="(app, index) in appointments" :key="app.id">
+                  <template v-if="app.id">
                     <td>{{ index + 1 }}</td>
                     <td>Mr. {{ app.patient_name }}</td>
                     <td>Dr. {{ app.doctor_name }}</td>
@@ -149,6 +165,8 @@ export default {
                     <td>
                       <button class="btn btn-info btn-sm" @click="viewPatientHistory(app.patient_id, app.department)">View</button>
                     </td>
+                    </template>
+
                   </tr>
                   <tr v-if="appointments.length === 0">
                     <td colspan="9" class="text-center">No Appointments Found</td>
@@ -159,12 +177,15 @@ export default {
           </div>
 
         </div>
+
+        </div>
       </div>
     </div>
     </div>`,
 
     data() {
         return {
+            loading: true,
             doctors: [],
             patients: [],
             appointments: [],
@@ -180,9 +201,13 @@ export default {
         appointmentCount() { return this.appointments.length; }
     },
    async mounted() {
-       await this.loadDoctors();
-        await this.loadPatients();
-        await this.loadAppointments();
+       this.loading = true;
+       await Promise.all([
+          this.loadDoctors(),
+          this.loadPatients(),
+          this.loadAppointments()
+       ]);
+       this.loading = false;
     },
     methods: {
         loadDoctors(){
