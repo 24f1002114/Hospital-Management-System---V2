@@ -179,14 +179,14 @@ export default {
         patientCount() { return this.patients.length; },
         appointmentCount() { return this.appointments.length; }
     },
-    mounted() {
-        this.loadDoctors();
-        this.loadPatients();
-        this.loadAppointments();
+   async mounted() {
+       await this.loadDoctors();
+        await this.loadPatients();
+        await this.loadAppointments();
     },
     methods: {
         loadDoctors(){
-            authFetch('/api/doctors', {
+           return authFetch('/api/doctors', {
                 method: 'GET',
                 headers: {
                     "Content-Type": "application/json",
@@ -197,9 +197,10 @@ export default {
             return r.json();
               })
               .then(d => this.doctors = Array.isArray(d) ? d : []);
+
         },
         loadPatients(){
-            authFetch('/api/patients', {
+            return authFetch('/api/patients', {
                 method: 'GET',
                 headers: {
                     "Content-Type": "application/json",
@@ -212,7 +213,7 @@ export default {
               .then(d => this.patients = Array.isArray(d) ? d : []);
         },
         loadAppointments(){
-            authFetch('/api/appointments', {
+           return authFetch('/api/appointments', {
                 method: 'GET',
                 headers: {
                     "Content-Type": "application/json",
