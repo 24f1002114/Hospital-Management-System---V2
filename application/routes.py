@@ -1,4 +1,5 @@
 import os
+from flask import after_this_request
 
 #from .cache import cache
 from .database import db
@@ -82,44 +83,69 @@ def register_patient():
     #cache.clear()
     return jsonify({"success": True, "message": "User created successfully"}), 201
 
+
 @app.route("/api/export", methods=["POST"])
-@auth_required("token")
+@auth_required()
 @roles_accepted("patient")
 def export_csv():
     task = csv_report.delay(patient_id=current_user.id)
-    return jsonify({"id": task.id, "status": task.status}), 202
+    return jsonify({
+        "id": task.id,
+        "status": task.status
+    }), 202
+
 
 @app.route("/api/csv_result/<task_id>")
-@auth_required("token")
+@auth_required()
 @roles_accepted("patient")
 def csv_result(task_id):
+
     res = AsyncResult(task_id)
+
     if not res.ready() or res.result is None:
-        return jsonify({"task_id": task_id, "status": res.status, "ready": False}), 202
+        return jsonify({
+            "task_id": task_id,
+            "status": res.status,
+            "ready": False
+        }), 202
 
     filename = res.result
+
     if not isinstance(filename, str):
-        return jsonify({"error": "invalid task result"}), 500
+        return jsonify({
+            "error": "invalid task result"
+        }), 500
 
     allowed_prefixes = [
         f"treatment_report_patient_{current_user.id}_",
         f"treatment_report_{current_user.id}_"
     ]
+
     if not any(filename.startswith(p) for p in allowed_prefixes):
-        return jsonify({"error": "forbidden", "message": "You may only download your own exports"}), 403
+        return jsonify({
+            "error": "forbidden",
+            "message": "You may only download your own exports"
+        }), 403
 
     directory = os.path.join(app.root_path, "static")
     filepath = os.path.join(directory, filename)
+
     if not os.path.exists(filepath):
-        return jsonify({"error": "file not found", "filename": filename}), 404
+        return jsonify({
+            "error": "file not found",
+            "filename": filename
+        }), 404
 
-    response = send_from_directory(directory, filename, as_attachment=True)  
-    
-    try:                        
-        os.remove(filepath)    
-    except OSError:             
-        pass                    
-    
-    return response 
+    @after_this_request
+    def remove_file(response):
+        try:
+            os.remove(filepath)
+        except Exception as e:
+            app.logger.error(f"Error deleting file: {e}")
+        return response
 
-
+    return send_from_directory(
+        directory,
+        filename,
+        as_attachment=True
+    )
