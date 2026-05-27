@@ -27,11 +27,6 @@ def user_login():
     if not check_password_hash(user.password, password):
         return jsonify({"success": False, "message": "Incorrect password!"}), 400
     login_user(user)
-
-    # Force fresh token generation
-    user.fs_token_uniquifier = None
-    db.session.commit()
-    
     token = user.get_auth_token() if hasattr(user, "get_auth_token") else None
     return jsonify({
         "success": True,

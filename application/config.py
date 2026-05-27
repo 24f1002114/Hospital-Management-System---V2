@@ -16,8 +16,10 @@ class LocalDevelopmentConfig(Config):
     SECURITY_PASSWORD_HASH = "bcrypt" 
     SECURITY_PASSWORD_SALT = "this-is-password-salt" 
     WTF_CSRF_ENABLED = False
+    WTF_CSRF_CHECK_DEFAULT = False
     SECURITY_TOKEN_AUTHENTICATION_HEADER = "Authentication-Token"
-
+    SECURITY_TOKEN_MAX_AGE = 86400  # 24 hours
+    SECURITY_CSRF_PROTECT_MECHANISMS = []
     # Flask-Caching configuration (add these)
     CACHE_TYPE = 'RedisCache'
     CACHE_REDIS_HOST = 'localhost'
@@ -33,9 +35,11 @@ class ProductionConfig(Config):
     SECRET_KEY = os.getenv("SECRET_KEY")
     SECURITY_PASSWORD_HASH = "bcrypt"
     SECURITY_PASSWORD_SALT = "this-is-password-salt"
-    WTF_CSRF_ENABLED = True
+    WTF_CSRF_ENABLED = False
     SECURITY_TOKEN_AUTHENTICATION_HEADER = "Authentication-Token"
     SECURITY_TOKEN_MAX_AGE = 86400  # 24 hours
+    SECURITY_CSRF_PROTECT_MECHANISMS = []
+    WTF_CSRF_CHECK_DEFAULT = False
     CACHE_TYPE = 'RedisCache'
     CACHE_REDIS_HOST = 'localhost'
     CACHE_REDIS_PORT = 6379
@@ -45,3 +49,4 @@ class ProductionConfig(Config):
     SQLALCHEMY_ENGINE_OPTIONS = {
         "connect_args": {"options": "-ctimezone=Asia/Kolkata"}
     }
+
