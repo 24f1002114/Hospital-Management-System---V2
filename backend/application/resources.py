@@ -1017,14 +1017,21 @@ class AvailabilityResource(Resource):
                 return {"message": "Doctor profile not found"}, 404
         
         availabilities = DoctorAvailability.query.filter_by(doctor_id=doctor.id).all()
-    
+
+        booked_slot_ids = {
+            a.slot_id for a in Appointment.query.filter_by(
+                doctor_id=doctor.user_id, status="Booked"
+            ).all()
+        }
+
         return [{
             "id": a.id,
             "date": a.date.strftime("%Y-%m-%d"),
             "day_of_week": a.day_of_week,
             "start_time": a.start_time.strftime("%H:%M"),
             "end_time": a.end_time.strftime("%H:%M"),
-            "is_active": a.is_active
+            "is_active": a.is_active,
+            "is_booked": a.id in booked_slot_ids  # ← new field
         } for a in availabilities], 200
     
     @auth_required("token")

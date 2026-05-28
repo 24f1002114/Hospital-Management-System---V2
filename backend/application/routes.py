@@ -84,6 +84,18 @@ def register_patient():
     return jsonify({"success": True, "message": "User created successfully"}), 201
 
 
+@app.route("/api/validate-token", methods=["GET"])
+@auth_required()
+def validate_token():
+    """Validate that the current token is valid and return user info"""
+    return jsonify({
+        "success": True,
+        "id": current_user.id,
+        "username": current_user.username,
+        "roles": [r.name for r in current_user.roles]
+    }), 200
+
+
 @app.route("/api/export", methods=["POST"])
 @auth_required()
 @roles_accepted("patient")
