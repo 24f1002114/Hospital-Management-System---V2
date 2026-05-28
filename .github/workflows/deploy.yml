@@ -1,50 +1,111 @@
 name: Deploy HMS to VPS
 
 on:
-push:
-branches:
-- production
+  push:
+    branches:
+      - production
+  workflow_dispatch:
 
 jobs:
-deploy:
-runs-on: ubuntu-latest
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-steps:
-  - name: Deploy to VPS
-    uses: appleboy/ssh-action@v1.0.3
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
 
-    with:
-      host: ${{ secrets.VPS_HOST }}
-      username: ${{ secrets.VPS_USER }}
-      key: ${{ secrets.VPS_SSH_KEY }}
-      port: 22
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: "pip"
+          cache-dependency-path: backend/requirements.txt
 
-      script: |
-        cd /var/www/Hospital-Management-System---V2
+      - name: Install Frontend Dependencies
+        working-directory: ./frontend
+        run: npm ci --legacy-peer-deps --maxsockets=1
 
-        echo "Pull latest code"
-        git checkout production
-        git pull origin production
+      - name: Build Frontend
+        working-directory: ./frontend
+        run: npm run build
 
-        echo "Activate virtual environment"
-        source hms/bin/activate
+      - name: Install Backend Dependencies
+        working-directory: ./backend
+        run: pip install -r requirements.txt
 
-        echo "Install backend dependencies"
-        pip install -r requirements.txt
+      - name: Check Backend Syntax
+        working-directory: ./backend
+        run: python -m py_compile application/*.py
 
-        echo "Build frontend"
-        cd frontend
-        npm install
-        npm run build
+  deploy:
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-        echo "Copy frontend build"
-        sudo rm -rf /var/www/hms-frontend/*
-        sudo cp -r dist/* /var/www/hms-frontend/
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          script_stop: true
+          script: |
+            set -e
+            echo "📦 Starting Deployment..."
 
-        echo "Restart backend"
-        sudo systemctl restart hms-gunicorn
+            cd /var/www/Hospital-Management-System---V2
 
-        echo "Restart nginx"
-        sudo systemctl restart nginx
+            git fetch origin production
+            git reset --hard origin/production
 
-        echo "Deployment completed successfully"
+            source hms/bin/activate
+
+            # ── Backend ────────────────────────────────────────────────────
+            echo "🔧 Installing Backend Dependencies..."
+            cd backend
+            pip install -r requirements.txt
+
+            # ── Frontend ───────────────────────────────────────────────────
+            echo "🎨 Building Frontend..."
+            cd ../frontend
+            npm ci --prefer-offline --no-audit --legacy-peer-deps --maxsockets=1
+            npm run build
+
+            # Copy dist to frontend server directory
+            echo "📤 Deploying Frontend Build..."
+            mkdir -p /var/www/hms-frontend
+            rm -rf /var/www/hms-frontend/*
+            cp -r dist/* /var/www/hms-frontend/
+
+            # Setup Frontend Systemd Service
+            echo "⚙️ Setting up Frontend Service..."
+            sudo cp /var/www/Hospital-Management-System---V2/hms-frontend.service /etc/systemd/system/
+            sudo systemctl daemon-reload
+            sudo systemctl enable hms-frontend
+            sudo systemctl restart hms-frontend
+
+            # ── Backend Services ───────────────────────────────────────────
+            echo "♻️ Restarting Backend Services..."
+            sudo systemctl restart hms-gunicorn
+            sudo systemctl restart celery
+            sudo systemctl restart celery-beat
+            sudo systemctl restart nginx
+
+            echo "🎉 Deployment Successful!"
+
+      - name: Deployment Success
+        if: success()
+        run: echo "✅ Deployment completed successfully"
+
+      - name: Deployment Failed
+        if: failure()
+        run: echo "❌ Deployment failed"
