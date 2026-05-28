@@ -1,4 +1,3 @@
-```yaml
 name: Deploy to VPS
 
 on:
@@ -10,9 +9,6 @@ on:
 
 jobs:
 
-  # =========================
-  # Validation Stage
-  # =========================
   validate:
     runs-on: ubuntu-latest
 
@@ -20,9 +16,6 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # =========================
-      # Setup Node.js
-      # =========================
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -30,9 +23,6 @@ jobs:
           cache: "npm"
           cache-dependency-path: frontend/package-lock.json
 
-      # =========================
-      # Setup Python
-      # =========================
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -40,9 +30,6 @@ jobs:
           cache: "pip"
           cache-dependency-path: backend/requirements.txt
 
-      # =========================
-      # Frontend Validation
-      # =========================
       - name: Install Frontend Dependencies
         working-directory: ./frontend
         run: npm ci
@@ -51,9 +38,6 @@ jobs:
         working-directory: ./frontend
         run: npm run build
 
-      # =========================
-      # Backend Validation
-      # =========================
       - name: Install Backend Dependencies
         working-directory: ./backend
         run: pip install -r requirements.txt
@@ -62,9 +46,6 @@ jobs:
         working-directory: ./backend
         run: python -m py_compile application/*.py
 
-  # =========================
-  # Deployment Stage
-  # =========================
   deploy:
     needs: validate
     runs-on: ubuntu-latest
@@ -75,66 +56,36 @@ jobs:
 
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v1.0.3
-
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT }}
           script_stop: true
-
           script: |
             set -e
-
             echo "📦 Starting Deployment..."
 
-            # =========================
-            # Go to Project Directory
-            # =========================
             cd /var/www/Hospital-Management-System---V2
 
-            # =========================
-            # Pull Latest Code
-            # =========================
             git fetch origin production
             git reset --hard origin/production
 
-            # =========================
-            # Activate Virtual Environment
-            # =========================
             source hms/bin/activate
 
-            # =========================
-            # Backend Setup
-            # =========================
             cd backend
-
             pip install -r requirements.txt
-
             export FLASK_APP=app.py
-
             flask db upgrade || true
 
-            # =========================
-            # Frontend Build
-            # =========================
             cd ../frontend
-
             npm ci
-
             npm run build
 
-            # =========================
-            # Replace Old Frontend Build
-            # =========================
             rm -rf ../backend/static/assets
             rm -f ../backend/static/index.html
-
             cp -r dist/* ../backend/static/
 
-            # =========================
-            # Restart Services
-            # =========================
             sudo systemctl restart hms-gunicorn
             sudo systemctl restart celery
             sudo systemctl restart celery-beat
@@ -151,4 +102,3 @@ jobs:
         run: |
           echo "❌ Deployment failed"
           exit 1
-```
