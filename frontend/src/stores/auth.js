@@ -4,7 +4,7 @@ export const useAuthStore = defineStore('auth', {
     state: () => ({
         token: localStorage.getItem('auth_token') || null,
         username: localStorage.getItem('username') || '',
-        userId: localStorage.getItem('user_id') || null,
+        userId: parseInt(localStorage.getItem('user_id')) || null,
         roles: JSON.parse(localStorage.getItem('roles') || '[]')
     }),
     getters: {
@@ -29,6 +29,13 @@ export const useAuthStore = defineStore('auth', {
             localStorage.setItem('username', data.username)
             localStorage.setItem('user_id', data.id)
             localStorage.setItem('roles', JSON.stringify(data.roles))
+        },
+        restoreFromStorage() {
+            // Restore state from localStorage on app initialization
+            this.token = localStorage.getItem('auth_token') || null
+            this.username = localStorage.getItem('username') || ''
+            this.userId = parseInt(localStorage.getItem('user_id')) || null
+            this.roles = JSON.parse(localStorage.getItem('roles') || '[]')
         },
         logout() {
             this.token = null

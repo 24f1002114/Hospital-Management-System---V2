@@ -1,0 +1,182 @@
+/* ============================================
+   HOSPITAL MANAGEMENT SYSTEM - GLOBAL STYLES
+   ============================================ */
+
+/* ---------- Layout ---------- */
+.wall {
+  background-color: #f8f9fa;
+}
+
+.navwall {
+  background-color: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.formbg {
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* ---------- Page Container ---------- */
+.page-container {
+  height: 700px;
+  overflow: auto;
+}
+
+.page-container-tall {
+  height: 750px;
+  overflow: auto;
+}
+
+.scroll-container {
+  overflow-y: auto;
+}
+
+/* ---------- Card ---------- */
+.card-page {
+  min-height: 600px;
+}
+
+/* ---------- Tables ---------- */
+.table-scroll-sm {
+  max-height: 140px;
+  overflow-y: auto;
+}
+
+.table-scroll-md {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.table-scroll-lg {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.table-scroll-xl {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.table-scroll-full {
+  max-height: 520px;
+  overflow-y: auto;
+}
+
+/* ---------- Forms ---------- */
+.required {
+  color: red;
+  margin-left: 2px;
+}
+
+.form-section {
+  border-radius: 8px;
+  padding: 16px;
+  background-color: #f8f9fa;
+  margin-bottom: 16px;
+}
+
+/* ---------- Spinner ---------- */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+}
+
+/* ---------- Badges ---------- */
+.badge-booked {
+  background-color: #198754;
+}
+
+.badge-completed {
+  background-color: #0d6efd;
+}
+
+.badge-cancelled {
+  background-color: #dc3545;
+}
+
+/* ---------- Avatar ---------- */
+.avatar-circle {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #6c757d;
+}
+
+.avatar-circle i {
+  font-size: 80px;
+  color: white;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 768px) {
+  .page-container {
+    height: auto;
+    min-height: 700px;
+  }
+
+  .page-container-tall {
+    height: auto;
+    min-height: 750px;
+  }
+
+  .avatar-circle {
+    width: 100px;
+    height: 100px;
+  }
+
+  .avatar-circle i {
+    font-size: 60px;
+  }
+
+  .main-content {
+    padding: 1rem 0.5rem;
+  }
+}
+
+/* ---------- Navbar ---------- */
+.navwall {
+  background-color: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  padding: 0.5rem 1rem;
+}
+
+/* ---------- Main Content ---------- */
+.main-content {
+  padding: 1.5rem 1rem;
+  min-height: calc(100vh - 120px);
+}
+
+/* ---------- Appointment Status ---------- */
+.status-booked {
+  color: #198754;
+  font-weight: 600;
+}
+
+.status-completed {
+  color: #0d6efd;
+  font-weight: 600;
+}
+
+.status-cancelled {
+  color: #dc3545;
+  font-weight: 600;
+}
+
+.status-default {
+  color: #6c757d;
+  font-weight: 600;
+}
