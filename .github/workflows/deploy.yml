@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - production
-
   workflow_dispatch:
 
 jobs:
@@ -73,23 +72,52 @@ jobs:
 
             source hms/bin/activate
 
+            # ── Backend ────────────────────────────────────────────────────
+            echo "🔧 Installing Backend Dependencies..."
             cd backend
             pip install -r requirements.txt
 
+            # ── Frontend ───────────────────────────────────────────────────
+            echo "🎨 Building Frontend..."
             cd ../frontend
             npm ci --prefer-offline --no-audit --legacy-peer-deps --maxsockets=1
             npm run build
 
-            rm -rf ../backend/static/assets
-            rm -f ../backend/static/index.html
-            cp -r dist/* ../backend/static/
+            # Copy dist to the directory Nginx serves directly.
+            # No http-server or PM2 needed — Nginx handles static files.
+            echo "📤 Deploying Frontend Build..."
+            mkdir -p /var/www/Hospital-Management-System---V2/frontend-dist
+            rm -rf /var/www/Hospital-Management-System---V2/frontend-dist/*
+            cp -r dist/* /var/www/Hospital-Management-System---V2/frontend-dist/
 
+            # ── Backend Services ───────────────────────────────────────────
+            echo "♻️ Restarting Backend Services..."
             sudo systemctl restart hms-gunicorn
             sudo systemctl restart celery
             sudo systemctl restart celery-beat
             sudo systemctl restart nginx
 
-            echo "🚀 Deployment Successful!"
+            # ── Health Checks ──────────────────────────────────────────────
+            echo "🏥 Running Health Checks..."
+            sleep 5
+
+            # Frontend: Nginx serves the Vue dist directly on port 80
+            curl -sf http://localhost/ > /dev/null \
+              && echo "✅ Frontend (Nginx): OK" \
+              || { echo "❌ Frontend (Nginx): FAILED"; exit 1; }
+
+            # Backend: expect a non-200 (e.g. 401) but NOT a connection error
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+              http://localhost:8000/api/validate-token \
+              -H "Authentication-Token: test")
+            if [ "$STATUS" = "000" ]; then
+              echo "❌ Backend (Gunicorn): FAILED — no response"
+              exit 1
+            else
+              echo "✅ Backend (Gunicorn): OK (HTTP $STATUS)"
+            fi
+
+            echo "🎉 Deployment Successful!"
 
       - name: Deployment Success
         if: success()
