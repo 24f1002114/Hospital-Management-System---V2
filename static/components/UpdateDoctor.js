@@ -1,9 +1,16 @@
 export default{
  template: `
-    <div class="row justify-content-center border d-flex align-items-center wall" style="height: 750px; overflow: auto;"> 
-      <div class="col-12 col-md-10 col-lg-10  mt-2 mb-2">
-       <div class="card shadow p-2 bg-light"> 
-         <div class="card-body "> 
+    <div class="container-fluid formbg p-2 p-md-4" style="min-height: 500px;"> 
+      <div class="row">
+      <div class="col-12 col-md-8 col-lg-6 mx-auto">
+       <div class="card shadow p-2 p-md-3 bg-light"> 
+         <div class="card-body"> 
+         <div v-if="loading" class="text-center p-5">
+            <div class="spinner-border text-primary"></div>
+            <p class="mt-2">Loading...</p>
+        </div>
+
+        <div v-else>
 
         <h2 class="text-center mb-4 mt-4">Update Doctor Profile</h2>
 
@@ -73,16 +80,24 @@ export default{
             </div>
 
             <div class="text-center mt-3">
-              <button type="submit" class="btn btn-primary px-4">Update</button>
+              <!-- update button -->
+              <button type="submit" class="btn btn-primary px-4" :disabled="saving">
+                  {{ saving ? 'Updating...' : 'Update' }}
+              </button>
             </div>
-          </div>
         </form>
           </div>
           </div>
+        </div>
+       </div>
+      </div>
       </div>
     </div>`,
     data: function(){
         return {
+          doctorId: this.$route.params.id,
+          loading: true,
+          saving: false,
             doctor: {
                 name: '',
                 age: '',
@@ -93,16 +108,16 @@ export default{
                 bio: '',
                 departments: []
             },
-            departments_name: [],
-            doctorId: null
+            departments_name: []
         };
     },
-    created(){
-        const doctorId = this.$route.params.id;
-        this.doctorId = doctorId;
-        this.loadDepartments();
-        this.FetchDoctorData(doctorId);
-    },
+   async mounted() {
+    await Promise.all([
+        this.loadDepartments(),
+        this.FetchDoctorData(this.doctorId)  // ← already available
+    ]);
+    this.loading = false;
+},
     methods: {
         getDepartmentName(deptId){
             const dept = this.departments_name.find(d => d.id === deptId);
@@ -110,21 +125,29 @@ export default{
         },
 
         FetchDoctorData(id){
-            authFetch(`/api/doctor/${id}`, {
+            return authFetchWithRetry(`/api/doctor/${id}`, {    // ✅ authFetchWithRetry + return
                 method: 'GET',
                 headers: {
                     "content-type": "application/json",
                 }
             })
-            .then(response => response.json())
+            .then(r => {
+              if (!r) return null;                          // ✅ !r guard
+              if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return null; }
+              return r.json();
+          })
             .then(data => {
+              if (!data) return;                            // ✅ null guard
                 this.doctor = data;
+                return data;                                // ✅ Return data to complete promise chain
             })
             .catch(err => console.error("Fetch Doctor Data Error:", err));
         },
 
         SaveDoctor(){
-            authFetch(`/api/doctor/${this.doctorId}`, {
+          if (this.saving) return;
+            this.saving = true;
+            return authFetchWithRetry(`/api/doctor/${this.doctorId}`, {  // ✅ authFetchWithRetry + return
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -132,24 +155,35 @@ export default{
                 body: JSON.stringify(this.doctor)
             })
             .then(response => {
+                if (!response) throw new Error('No response');         // ✅ !r guard
+                if (response.status === 401) { localStorage.clear(); this.$router.push('/login'); return; }
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
                 }
                 alert("Doctor profile updated successfully!");
-                this.FetchDoctorData(this.doctorId);
+                return this.FetchDoctorData(this.doctorId);           // ✅ Wait for refresh to complete
             })
-            .catch(err => console.error("Save Doctor Error:", err));
+            .catch(err => console.error("Save Doctor Error:", err))
+            .finally(() => { this.saving = false; });
         },
 
         loadDepartments(){
-            authFetch('/api/departments', {
+            return authFetchWithRetry('/api/departments', {    // ✅ authFetchWithRetry + return
                 method: 'GET',
                 headers: {
                     "Content-Type": "application/json",
                 }
             })
-            .then(response => response.json())
-            .then(data => this.departments_name = data)
+            .then(r => {
+                if (!r) return null;                          // ✅ !r guard
+                if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return null; }
+                return r.json();
+            })
+            .then(data => {
+              if (!data) return;                            // ✅ null guard
+              this.departments_name = data;
+              return data;                                  // ✅ Return data to complete promise chain
+            })
             .catch(err => console.error("Load Departments Error:", err));
         }
     }

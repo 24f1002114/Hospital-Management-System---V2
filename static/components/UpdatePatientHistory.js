@@ -142,7 +142,7 @@ export default {
     if (this.saving) return;
     this.saving = true;
 
-    authFetch('/api/treatments', {
+    return authFetchWithRetry('/api/treatments', {           // ✅ authFetchWithRetry + return
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -151,11 +151,13 @@ export default {
         })
     })
       .then(r => {
+          if (!r) throw new Error('No response');            // ✅ !r guard
           if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return; }
           if (!r.ok) throw new Error('Failed to save');
           return r.json();
       })
-      .then(() => {
+      .then(data => {
+          if (!data) return;                                 // ✅ null guard
           alert('Saved!');
           this.goBack();
       })
