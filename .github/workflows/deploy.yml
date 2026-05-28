@@ -1,170 +1,154 @@
+```yaml
 name: Deploy to VPS
 
 on:
   push:
     branches:
       - production
-  workflow_dispatch:  # Allow manual triggers
+
+  workflow_dispatch:
 
 jobs:
-  # Pre-deployment validation
+
+  # =========================
+  # Validation Stage
+  # =========================
   validate:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
 
-      - name: Setup Node
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # =========================
+      # Setup Node.js
+      # =========================
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: 'frontend/package-lock.json'
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
 
+      # =========================
+      # Setup Python
+      # =========================
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
-          cache: 'pip'
-          cache-dependency-path: 'backend/requirements.txt'
+          python-version: "3.10"
+          cache: "pip"
+          cache-dependency-path: backend/requirements.txt
 
-      - name: Install frontend dependencies
+      # =========================
+      # Frontend Validation
+      # =========================
+      - name: Install Frontend Dependencies
         working-directory: ./frontend
         run: npm ci
 
-      - name: Build frontend
+      - name: Build Frontend
         working-directory: ./frontend
         run: npm run build
 
-      - name: Lint frontend
-        working-directory: ./frontend
-        run: npm run lint 2>/dev/null || echo "No lint script"
-
-      - name: Install backend dependencies
+      # =========================
+      # Backend Validation
+      # =========================
+      - name: Install Backend Dependencies
         working-directory: ./backend
         run: pip install -r requirements.txt
 
-      - name: Check backend syntax
+      - name: Check Backend Syntax
         working-directory: ./backend
         run: python -m py_compile application/*.py
 
-  # Deployment
+  # =========================
+  # Deployment Stage
+  # =========================
   deploy:
     needs: validate
     runs-on: ubuntu-latest
-    environment: production
-    
+
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v4
 
       - name: Deploy to VPS
-        uses: appleboy/ssh-action@v1.8.0
+        uses: appleboy/ssh-action@v1.0.3
+
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          port: ${{ secrets.VPS_PORT || 22 }}
-          script_stop: true  # Stop on first error
+          port: ${{ secrets.VPS_PORT }}
+          script_stop: true
+
           script: |
-            set -e  # Exit on error
-            
-            echo "📦 Starting deployment..."
-            
-            # Navigate to project directory
+            set -e
+
+            echo "📦 Starting Deployment..."
+
+            # =========================
+            # Go to Project Directory
+            # =========================
             cd /var/www/Hospital-Management-System---V2
-            
-            # Save current commit for rollback
-            PREV_COMMIT=$(git rev-parse HEAD)
-            echo "Previous commit: $PREV_COMMIT"
-            
-            # Pull latest code
-            echo "📥 Pulling latest code..."
+
+            # =========================
+            # Pull Latest Code
+            # =========================
             git fetch origin production
             git reset --hard origin/production
-            CURRENT_COMMIT=$(git rev-parse HEAD)
-            echo "Current commit: $CURRENT_COMMIT"
-            
-            # Backend updates
-            echo "🔧 Updating backend..."
+
+            # =========================
+            # Activate Virtual Environment
+            # =========================
+            source hms/bin/activate
+
+            # =========================
+            # Backend Setup
+            # =========================
             cd backend
-            pip install -r requirements.txt --quiet
-            
-            # Database migrations
-            echo "🗄️ Running database migrations..."
-            python -m flask db upgrade || true
-            
-            # Frontend updates
-            echo "🎨 Building frontend..."
+
+            pip install -r requirements.txt
+
+            export FLASK_APP=app.py
+
+            flask db upgrade || true
+
+            # =========================
+            # Frontend Build
+            # =========================
             cd ../frontend
-            npm ci --prefer-offline --no-audit
+
+            npm ci
+
             npm run build
-            
-            # Copy built frontend to backend static folder
+
+            # =========================
+            # Replace Old Frontend Build
+            # =========================
+            rm -rf ../backend/static/assets
+            rm -f ../backend/static/index.html
+
             cp -r dist/* ../backend/static/
-            
-            # Restart services
-            echo "🔄 Restarting services..."
+
+            # =========================
+            # Restart Services
+            # =========================
             sudo systemctl restart hms-gunicorn
             sudo systemctl restart celery
             sudo systemctl restart celery-beat
-            
-            # Wait for services to be ready
-            sleep 3
-            
-            # Health check
-            echo "✅ Running health checks..."
-            if sudo systemctl is-active --quiet hms-gunicorn; then
-              echo "✓ Gunicorn is running"
-            else
-              echo "✗ Gunicorn failed to start - ROLLING BACK"
-              git reset --hard $PREV_COMMIT
-              sudo systemctl restart hms-gunicorn
-              exit 1
-            fi
-            
-            if sudo systemctl is-active --quiet celery; then
-              echo "✓ Celery is running"
-            else
-              echo "✗ Celery failed to start - ROLLING BACK"
-              git reset --hard $PREV_COMMIT
-              sudo systemctl restart hms-gunicorn
-              exit 1
-            fi
-            
-            echo "🚀 Deployment successful!"
+            sudo systemctl restart nginx
 
-      - name: Deployment Status - Success
+            echo "🚀 Deployment Successful!"
+
+      - name: Deployment Success
         if: success()
         run: echo "✅ Deployment completed successfully"
 
-      - name: Deployment Status - Failed
+      - name: Deployment Failed
         if: failure()
         run: |
           echo "❌ Deployment failed"
           exit 1
-
-  # Optional: Slack notification
-  notify:
-    needs: [validate, deploy]
-    runs-on: ubuntu-latest
-    if: always()
-    
-    steps:
-      - name: Slack Notification
-        uses: slackapi/slack-github-action@v1.24.0
-        if: ${{ secrets.SLACK_WEBHOOK_URL != '' }}
-        with:
-          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
-          payload: |
-            {
-              "text": "Hospital Management System Deployment",
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "*Deployment Status*: ${{ needs.deploy.result == 'success' && '✅ Success' || '❌ Failed' }}\n*Branch*: production\n*Commit*: ${{ github.sha }}\n*Author*: ${{ github.actor }}"
-                  }
-                }
-              ]
-            }
+```
