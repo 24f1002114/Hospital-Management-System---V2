@@ -1,8 +1,9 @@
 export default {
     template: `
-    <div class="row  wall border d-flex" style="height: 750px; overflow: auto;"> 
-      <div class="col-12  p-4 border" style="overflow-y: auto;">
-        <div class="card shadow p-3 bg-white"> 
+    <div class="container-fluid wall" style="min-height: 400px;" class="overflow-auto">
+      <div class="row">
+      <div class="col-12 p-2 p-md-4">
+        <div class="card shadow p-2 p-md-3 bg-white"> 
           <div class="card-body">
           <div v-if="loading" class="text-center p-5">
             <div class="spinner-border text-primary"></div>
@@ -11,57 +12,54 @@ export default {
         <div v-else>
 
           <!-- Registered Doctors -->
-
-          <div class="container-fluid">
-           <div class="d-flex justify-content-between align-items-center mb-3">
-              <div class="col-3 d-flex justify-content-start align-items-center gap-2">
-                <h4 class="mb-0">Registered Doctors</h4>
-                <span class="badge bg-primary">{{ doctorCount }}</span>
-              </div>
-              <div class="col-5 d-flex justify-content-start align-items-center">
-                <form class="d-flex" @submit.prevent="searchDoctors">
-                  <input class="form-control me-2" type="search" placeholder="Search..." v-model="DsearchQuery"/>
-                  <select v-model="DsearchType" class="form-select me-2">
-                    <option value="" disabled selected>Search By</option>
-                    <option value="specialization">Specialization</option>
-                    <option value="name">Doctor Name</option>
-                  </select>
-                  <button class="btn btn-outline-success" type="submit">Search</button>
-                  <button class="btn btn-outline-secondary ms-2" type="button" @click="clearDoctorSearch">Clear</button>
-                </form>
-              </div>
-              <div class="col-4 d-flex justify-content-end align-items-center flex-nowrap gap-2"> 
-                <button class="btn btn-primary" @click="$router.push('/add/doctor')">Add Doctor</button>
-                <button class="btn btn-secondary" @click="$router.push('/manage/departments')">Manage Departments</button> 
-              </div>
+          <div class="container-fluid mb-5">
+            <div class="bg-gradient" style="background: linear-gradient(135deg, #0d6efd 0%, #0dcaf0 100%); padding: 1.5rem; border-radius: 0.5rem 0.5rem 0 0; margin-bottom: 0;">
+              <h4 class="mb-0 text-white fw-bold"><i class="bi bi-people-fill me-2"></i>Doctors <span class="badge bg-white text-primary fs-6">{{ doctorCount }}</span></h4>
             </div>
+            <div class="border border-top-0 rounded-bottom p-4">
+              <div class="row mb-4 align-items-end g-3">
+                <div class="col-12 col-lg-6">
+                  <form class="d-flex flex-column flex-md-row gap-3" @submit.prevent="searchDoctors">
+                    <input class="form-control" type="search" placeholder="Search..." v-model="DsearchQuery"/>
+                    <select v-model="DsearchType" class="form-select" style="max-width: 180px;">
+                      <option value="" disabled selected>By</option>
+                      <option value="specialization">Specialization</option>
+                      <option value="name">Name</option>
+                    </select>
+                    <button class="btn btn-outline-primary" type="submit">Search</button>
+                    <button class="btn btn-outline-secondary" type="button" @click="clearDoctorSearch">Clear</button>
+                  </form>
+                </div>
+                <div class="col-12 col-lg-6 d-flex gap-3 justify-content-lg-end">
+                  <button class="btn btn-primary" @click="$router.push('/add/doctor')">➕ Add Doctor</button>
+                  <button class="btn btn-secondary" @click="$router.push('/manage/departments')">⚙️ Manage</button>
+                </div>
+              </div>
 
-            <div class="table-responsive overflow-auto" style="max-height: 140px;">
+            <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
               <table class="table table-striped table-bordered">
-                <thead class="table-dark">
+                <thead class="table-dark" style="position: sticky; top: 0;">
                   <tr>
-                    <th style="width: 10%;">SN</th>
-                    <th style="width: 30%;">Name</th>
-                    <th style="width: 60%;">Actions</th>
+                    <th style="width: 8%;">SN</th>
+                    <th style="width: 25%;">Name</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-
                   <tr v-for="(doc, index) in doctors" :key="doc.id">
                   <template v-if="doc.id">
                     <td>{{ index + 1 }}</td>
                     <td>Dr. {{ doc.name }}</td>
-                    <td>
-                      <button class="btn btn-primary btn-sm me-2" @click="GetUpdateDoctor(doc.id)">View/Edit</button>
-                      <button class="btn btn-danger btn-sm me-2" @click="DeleteDoctor(doc.id)">Delete</button>
-                      <button v-if="!doc.blacklisted" class="btn btn-warning btn-sm" @click="Blacklist(doc.id)">Blacklist</button>
-                      <button v-if="doc.blacklisted" class="btn btn-secondary btn-sm" @click="RemoveBlacklist(doc.id)">Blacklisted</button>
+                    <td class="text-nowrap" style="display: flex; gap: 3px; align-items: center; flex-wrap: wrap;">
+                      <button class="btn btn-primary" style="padding: 0.2rem 0.35rem; font-size: 0.7rem; line-height: 1.2;" @click="GetUpdateDoctor(doc.id)">Edit</button>
+                      <button class="btn btn-danger" style="padding: 0.2rem 0.35rem; font-size: 0.7rem; line-height: 1.2;" @click="DeleteDoctor(doc.id)">Del</button>
+                      <button v-if="!doc.blacklisted" class="btn btn-warning" style="padding: 0.2rem 0.35rem; font-size: 0.7rem; line-height: 1.2;" @click="Blacklist(doc.id)">Block</button>
+                      <button v-if="doc.blacklisted" class="btn btn-secondary" style="padding: 0.2rem 0.35rem; font-size: 0.7rem; line-height: 1.2;" @click="RemoveBlacklist(doc.id)">Unblock</button>
                     </td>
                      </template>
                   </tr>
-
                   <tr v-if="doctors.length === 0">
-                    <td colspan="3" class="text-center">No Doctors Found : Given Specialization or Name not matched.</td>
+                    <td colspan="3" class="text-center text-muted">No Doctors Found</td>
                   </tr>  
                 </tbody>
               </table>
@@ -69,52 +67,50 @@ export default {
           </div>
 
           <!-- Registered Patients -->
-          <div class="container-fluid mt-3">
-            <div class="d-flex justify-content-between align-items-center mb-3"> 
-              <div class="col-3 d-flex justify-content-start align-items-center gap-2"> 
-                <h4 class="mb-0">Registered Patients</h4>
-                <span class="badge bg-success">{{ patientCount }}</span>
-              </div>
-              <div class="col-9 d-flex justify-content-start align-items-center">
-                <form class="d-flex" @submit.prevent="searchPatients">
-                  <input class="form-control me-2" type="search" placeholder="Search..." v-model="PsearchQuery"/>
-                  <select v-model="PsearchType" class="form-select me-2">
-                    <option value="" disabled selected>Search By</option>
-                    <option value="id">ID</option>
-                    <option value="name">Patient Name</option>
-                  </select>
-                  <button class="btn btn-outline-success" type="submit">Search</button>
-                  <button class="btn btn-outline-secondary ms-2" type="button" @click="clearPatientSearch">Clear</button>
-                </form>
-              </div>
+          <div class="container-fluid mb-5">
+            <div class="bg-gradient" style="background: linear-gradient(135deg, #198754 0%, #20c997 100%); padding: 1.5rem; border-radius: 0.5rem 0.5rem 0 0; margin-bottom: 0;">
+              <h4 class="mb-0 text-white fw-bold"><i class="bi bi-person-hearts me-2"></i>Patients <span class="badge bg-white text-success fs-6">{{ patientCount }}</span></h4>
             </div>
+            <div class="border border-top-0 rounded-bottom p-4">
+              <div class="row mb-4 align-items-end g-3">
+                <div class="col-12 col-lg-6">
+                  <form class="d-flex flex-column flex-md-row gap-3" @submit.prevent="searchPatients">
+                    <input class="form-control" type="search" placeholder="Search..." v-model="PsearchQuery"/>
+                    <select v-model="PsearchType" class="form-select" style="max-width: 180px;">
+                      <option value="" disabled selected>By</option>
+                      <option value="id">ID</option>
+                      <option value="name">Name</option>
+                    </select>
+                    <button class="btn btn-outline-success" type="submit">Search</button>
+                    <button class="btn btn-outline-secondary" type="button" @click="clearPatientSearch">Clear</button>
+                  </form>
+                </div>
+              </div>
 
-            <div class="table-responsive overflow-auto" style="max-height: 140px;">
+            <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
               <table class="table table-striped table-bordered">
-                <thead class="table-dark">
+                <thead class="table-dark" style="position: sticky; top: 0;">
                   <tr>
-                    <th style="width: 10%;">SN</th>
-                    <th style="width: 30%;">Name</th>
-                    <th style="width: 60%;">Actions</th>
+                    <th style="width: 8%;">SN</th>
+                    <th style="width: 25%;">Name</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-
                   <tr v-for="(pat, index) in patients" :key="pat.id"> 
                     <template v-if="pat.id">
                       <td>{{ index + 1 }}</td>
-                      <td>Mr. {{ pat.name }}</td>
-                      <td>
-                      <button class="btn btn-primary btn-sm me-2" @click="GetUpdatePatient(pat.id)">View/Edit</button>
-                      <button class="btn btn-danger btn-sm me-2" @click="DeletePatient(pat.id)">Delete</button>
-                      <button v-if="!pat.blacklisted" class="btn btn-warning btn-sm" @click="Blacklist(pat.id)">Blacklist</button>
-                      <button v-if="pat.blacklisted" class="btn btn-secondary btn-sm" @click="RemoveBlacklist(pat.id)">Blacklisted</button>
+                      <td>{{ pat.name }}</td>
+                      <td class="text-nowrap" style="display: flex; gap: 3px; align-items: center; flex-wrap: wrap;">
+                      <button class="btn btn-primary" style="padding: 0.2rem 0.35rem; font-size: 0.7rem; line-height: 1.2;" @click="GetUpdatePatient(pat.id)">Edit</button>
+                      <button class="btn btn-danger" style="padding: 0.2rem 0.35rem; font-size: 0.7rem; line-height: 1.2;" @click="DeletePatient(pat.id)">Del</button>
+                      <button v-if="!pat.blacklisted" class="btn btn-warning" style="padding: 0.2rem 0.35rem; font-size: 0.7rem; line-height: 1.2;" @click="Blacklist(pat.id)">Block</button>
+                      <button v-if="pat.blacklisted" class="btn btn-secondary" style="padding: 0.2rem 0.35rem; font-size: 0.7rem; line-height: 1.2;" @click="RemoveBlacklist(pat.id)">Unblock</button>
                      </td>
                      </template>
                   </tr>
-
                   <tr v-if="patients.length === 0">
-                    <td colspan="3" class="text-center">No Patients Found : Given ID or Name not matched.</td>
+                    <td colspan="3" class="text-center text-muted">No Patients Found</td>
                   </tr>
                 </tbody>
               </table>
@@ -122,65 +118,57 @@ export default {
           </div>
 
           <!-- Upcoming Appointments -->
-          <div class="container-fluid mt-3">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-              <div class="d-flex align-items-center gap-2">
-                <h4 class="mb-0">Upcoming/Past Appointments</h4>
-                <span class="badge bg-info">{{ appointmentCount }}</span>
-              </div>
+          <div class="container-fluid mt-5">
+            <div class="bg-gradient" style="background: linear-gradient(135deg, #0dcaf0 0%, #13b0f5 100%); padding: 1.5rem; border-radius: 0.5rem 0.5rem 0 0; margin-bottom: 0;">
+              <h4 class="mb-0 text-white fw-bold"><i class="bi bi-calendar2-check me-2"></i>Appointment List <span class="badge bg-white text-info fs-6">{{ appointmentCount }}</span></h4>
             </div>
+            <div class="border border-top-0 rounded-bottom p-3">
 
-            <div class="table-responsive overflow-auto" style="max-height: 140px;">
+            <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
               <table class="table table-striped table-bordered">
-                <thead class="table-dark">
+                <thead class="table-dark" style="position: sticky; top: 0;">
                   <tr>
                     <th style="width: 5%;">SN</th>
-                    <th style="width: 20%;">Patient Name</th>
-                    <th style="width: 20%;">Doctor Name</th>
-                    <th style="width: 15%;">Department</th>
+                    <th style="width: 15%;">Patient</th>
+                    <th style="width: 15%;">Doctor</th>
+                    <th style="width: 12%;">Dept</th>
                     <th style="width: 10%;">Date</th>
-                    <th style="width: 8%;">Day</th>
-                    <th style="width: 10%;">Time Slot</th>
+                    <th style="width: 8%;">Time</th>
                     <th style="width: 10%;">Status</th>
-                    <th style="width: 15%;">History</th>
+                    <th style="width: 10%;">History</th>
                   </tr>
                 </thead>
                 <tbody>
-                
                   <tr v-for="(app, index) in appointments" :key="app.id">
                   <template v-if="app.id">
                     <td>{{ index + 1 }}</td>
-                    <td>Mr. {{ app.patient_name }}</td>
-                    <td>Dr. {{ app.doctor_name }}</td>
-                    <td>{{ app.department }}</td>
-                    <td>{{ app.slot_details ? app.slot_details.date : 'N/A' }}</td>
-                    <td>{{ app.slot_details ? app.slot_details.day_of_week : 'N/A' }}</td>
-                    <td>{{ app.slot_details ? app.slot_details.start_time + ' - ' + app.slot_details.end_time : 'N/A' }}</td>
+                    <td><small>{{ app.patient_name }}</small></td>
+                    <td><small>{{ app.doctor_name }}</small></td>
+                    <td><small>{{ app.department }}</small></td>
+                    <td><small>{{ app.slot_details ? app.slot_details.date : 'N/A' }}</small></td>
+                    <td><small>{{ app.slot_details ? app.slot_details.start_time : 'N/A' }}</small></td>
                     <td>
-                      <span v-if="app.status === 'Booked'" class="badge bg-success">{{ app.status }}</span>
-                      <span v-else-if="app.status === 'Completed'" class="badge bg-primary">{{ app.status }}</span>
-                      <span v-else-if="app.status === 'Cancelled'" class="badge bg-danger">{{ app.status }}</span>
-                      <span v-else class="badge bg-secondary">{{ app.status }}</span>
+                      <span v-if="app.status === 'Booked'" class="badge bg-success">✓</span>
+                      <span v-else-if="app.status === 'Completed'" class="badge bg-primary">✓</span>
+                      <span v-else-if="app.status === 'Cancelled'" class="badge bg-danger">✗</span>
+                      <span v-else class="badge bg-secondary">?</span>
                     </td>
-                    <td>
-                      <button class="btn btn-info btn-sm" @click="viewPatientHistory(app.patient_id, app.department)">View</button>
+                    <td class="text-center">
+                      <button class="btn btn-info" style="padding: 0.2rem 0.35rem; font-size: 0.7rem; line-height: 1.2;" @click="viewPatientHistory(app.patient_id, app.department)">View</button>
                     </td>
                     </template>
-
                   </tr>
                   <tr v-if="appointments.length === 0">
-                    <td colspan="9" class="text-center">No Appointments Found</td>
+                    <td colspan="8" class="text-center text-muted">No Appointments Found</td>
                   </tr>
                 </tbody>
               </table>
             </div>
           </div>
-
         </div>
-
-        </div>
+       </div>
       </div>
-    </div>
+      </div>
     </div>`,
 
     data() {
@@ -210,156 +198,175 @@ export default {
        this.loading = false;
     },
     methods: {
-        loadDoctors(){
-           return authFetch('/api/doctors', {
-                method: 'GET',
-                headers: {
-                    "Content-Type": "application/json",
-                }
-            })
-            .then(r => {
-            if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return []; }
+    loadDoctors(){
+        return authFetchWithRetry('/api/doctors', {
+            method: 'GET',
+            headers: { "Content-Type": "application/json" }
+        })
+        .then(r => {
+            if (!r) return null;                            // ✅ !r guard
+            if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return null; }
             return r.json();
-              })
-              .then(d => this.doctors = Array.isArray(d) ? d : []);
+        })
+        .then(d => { if (d !== null) this.doctors = Array.isArray(d) ? d : []; });
+    },
 
-        },
-        loadPatients(){
-            return authFetch('/api/patients', {
-                method: 'GET',
-                headers: {
-                    "Content-Type": "application/json",
-                }
-            })
-            .then(r => {
-            if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return []; }
+    loadPatients(){
+        return authFetchWithRetry('/api/patients', {
+            method: 'GET',
+            headers: { "Content-Type": "application/json" }
+        })
+        .then(r => {
+            if (!r) return null;                            // ✅ !r guard
+            if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return null; }
             return r.json();
-              })
-              .then(d => this.patients = Array.isArray(d) ? d : []);
-        },
-        loadAppointments(){
-           return authFetch('/api/appointments', {
-                method: 'GET',
-                headers: {
-                    "Content-Type": "application/json",
-                }
-            })
-            .then(r => {
-            if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return []; }
-            if (r.status === 404) { return []; } 
+        })
+        .then(d => { if (d !== null) this.patients = Array.isArray(d) ? d : []; });
+    },
+
+    loadAppointments(){
+        return authFetchWithRetry('/api/appointments', {
+            method: 'GET',
+            headers: { "Content-Type": "application/json" }
+        })
+        .then(r => {
+            if (!r) return null;                            // ✅ !r guard
+            if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return null; }
+            if (r.status === 404) return [];
             return r.json();
-              })
-            .then(d => this.appointments = Array.isArray(d) ? d : []);
-        },
-        searchDoctors() {
-            authFetch(`/api/search/doctors?query=${this.DsearchQuery}&type=${this.DsearchType}`, {
-                method: 'GET',
-                headers: {
-                  "Content-Type": "application/json",
-                }
-            })
-            .then(r => {
-            if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return []; }
+        })
+        .then(d => { if (d !== null) this.appointments = Array.isArray(d) ? d : []; });
+    },
+
+    searchDoctors(){
+        return authFetchWithRetry(`/api/search/doctors?query=${this.DsearchQuery}&type=${this.DsearchType}`, {
+            method: 'GET',
+            headers: { "Content-Type": "application/json" }
+        })
+        .then(r => {
+            if (!r) return null;                            // ✅ !r guard
+            if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return null; }
             return r.json();
-              })
-              .then(d => this.doctors = Array.isArray(d) ? d : [])
-              .catch(err => console.error("Search Error:", err));
-        },
-        clearDoctorSearch() {
-            this.DsearchQuery = '';
-            this.DsearchType = '';
+        })
+        .then(d => { if (d !== null) this.doctors = Array.isArray(d) ? d : []; })
+        .catch(err => console.error("Search Error:", err));
+    },
+
+    searchPatients(){
+        return authFetchWithRetry(`/api/search/patients?query=${this.PsearchQuery}&type=${this.PsearchType}`, {
+            method: 'GET',
+            headers: { "Content-Type": "application/json" }
+        })
+        .then(r => {
+            if (!r) return null;                            // ✅ !r guard
+            if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return null; }
+            return r.json();
+        })
+        .then(d => { if (d !== null) this.patients = Array.isArray(d) ? d : []; })
+        .catch(err => console.error("Search Error:", err));
+    },
+
+    clearDoctorSearch(){
+        this.DsearchQuery = '';
+        this.DsearchType = '';
+        this.loadDoctors();
+    },
+
+    clearPatientSearch(){
+        this.PsearchQuery = '';
+        this.PsearchType = '';
+        this.loadPatients();
+    },
+
+    GetUpdateDoctor(user_id){
+        this.$router.push({ path: `/update/doctor/${user_id}` });
+    },
+
+    DeleteDoctor(user_id){
+        if (!confirm("Are you sure you want to delete this doctor?")) return;
+        return authFetchWithRetry(`/api/doctor/${user_id}`, {
+            method: 'DELETE',
+            headers: { "Content-Type": "application/json" }
+        })
+        .then(r => {
+            if (!r) return null;                            // ✅ !r guard
+            if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return null; }
+            return r.json();
+        })
+        .then(d => {
+            if (!d) return;
+            alert(d.message);
             this.loadDoctors();
-        },
-        searchPatients() {
-            authFetch(`/api/search/patients?query=${this.PsearchQuery}&type=${this.PsearchType}`, {
-                method: 'GET',
-                headers: {
-                  "Content-Type": "application/json",
-                }
-            })
-            .then(r => {
-            if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return []; }
+        })
+        .catch(err => console.error("Delete Doctor Error:", err));
+    },
+
+    GetUpdatePatient(user_id){
+        this.$router.push({ path: `/update/patient/${user_id}` });
+    },
+
+    DeletePatient(user_id){
+        if (!confirm("Are you sure you want to delete this patient?")) return;
+        return authFetchWithRetry(`/api/patient/${user_id}`, {
+            method: 'DELETE',
+            headers: { "Content-Type": "application/json" }
+        })
+        .then(r => {
+            if (!r) return null;                            // ✅ !r guard
+            if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return null; }
             return r.json();
-              })
-              .then(d => this.patients = Array.isArray(d) ? d : [])
-              .catch(err => console.error("Search Error:", err));
-        },
-        clearPatientSearch() {
-            this.PsearchQuery = '';
-            this.PsearchType = '';
-            this.loadPatients();  
-        },
-        GetUpdateDoctor(user_id){
-          this.$router.push({path: `/update/doctor/${user_id}`});
-        },
-        DeleteDoctor(user_id){
-          if (!confirm("Are you sure you want to delete this doctor?")) return;
-          authFetch(`/api/doctor/${user_id}`, {
-              method: 'DELETE',
-              headers: {
-                  "Content-Type": "application/json",
-              }
-          })
-          .then(r => r.json())
-          .then(d => {
-              alert(d.message);
-              this.loadDoctors();
-          })
-          .catch(err => console.error("Delete Doctor Error:", err));
-        },
-        GetUpdatePatient(user_id){
-          this.$router.push({path: `/update/patient/${user_id}`});
-        },
-        DeletePatient(user_id){
-          if (!confirm("Are you sure you want to delete this patient?")) return;
-          authFetch(`/api/patient/${user_id}`, {
-              method: 'DELETE',
-              headers: {
-                  "Content-Type": "application/json",
-              }
-          })
-          .then(r => r.json())
-          .then(d => {
-              alert(d.message);
-              this.loadPatients();
-          })
-          .catch(err => console.error("Delete Patient Error:", err));
-        },
-        Blacklist(user_id){
-            authFetch(`/api/user/${user_id}/blacklist`, {
-                method: 'POST',
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ user_id })
-            })
-            .then(r => r.json())
-            .then(d => {
-                alert(d.message);
-                this.loadDoctors();
-                this.loadPatients();
-            })
-            .catch(err => console.error("Blacklist Error:", err));
-        },
-        RemoveBlacklist(user_id){
-            authFetch(`/api/user/${user_id}/blacklist`, {
-                method: 'DELETE',
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ user_id })
-            })
-            .then(r => r.json())
-            .then(d => {
-                alert(d.message);
-                this.loadDoctors();
-                this.loadPatients();
-            })
-            .catch(err => console.error("Remove Blacklist Error:", err));
-        },
-        viewPatientHistory(patientId, department) {
-            this.$router.push({ path: `/patient/history/${patientId}/${department}` });
-        }
+        })
+        .then(d => {
+            if (!d) return;
+            alert(d.message);
+            this.loadPatients();
+        })
+        .catch(err => console.error("Delete Patient Error:", err));
+    },
+
+    Blacklist(user_id){
+        return authFetchWithRetry(`/api/user/${user_id}/blacklist`, {
+            method: 'POST',
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ user_id })
+        })
+        .then(r => {
+            if (!r) return null;                            // ✅ !r guard
+            if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return null; }
+            return r.json();
+        })
+        .then(d => {
+            if (!d) return;
+            alert(d.message);
+            this.loadDoctors();
+            this.loadPatients();
+        })
+        .catch(err => console.error("Blacklist Error:", err));
+    },
+
+    RemoveBlacklist(user_id){
+        return authFetchWithRetry(`/api/user/${user_id}/blacklist`, {
+            method: 'DELETE',
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ user_id })
+        })
+        .then(r => {
+            if (!r) return null;                            // ✅ !r guard
+            if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return null; }
+            return r.json();
+        })
+        .then(d => {
+            if (!d) return;
+            alert(d.message);
+            this.loadDoctors();
+            this.loadPatients();
+        })
+        .catch(err => console.error("Remove Blacklist Error:", err));
+    },
+
+    viewPatientHistory(patientId, department){
+        this.$router.push({ path: `/patient/history/${patientId}/${department}` });
     }
+}
 }
 

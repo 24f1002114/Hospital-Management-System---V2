@@ -61,80 +61,78 @@ export default {
 
   data() {
     return {
-      doctorId: null,
+      doctorId: this.$route.params.id || this.$route.params.doctor_id,
       doctor: {},
       loading: true,
       error: null
     };
   },
 
-  created() {
-    this.doctorId = this.$route.params.id || this.$route.params.doctor_id;
-    this.loadDoctor();
-  },
+  async mounted() {
+    await this.loadDoctor();
+},
 
   methods: {
-   loadDoctor() {
-  this.loading = true;
-  
-  authFetch(`/api/doctor/${this.doctorId}`, {
-    headers: {
-      'Content-Type': 'application/json',
-    }
-  })
-    .then(response => {
-      if (!response.ok) throw new Error('Failed to load doctor');
-      return response.json();
-    })
-    .then(data => {
-      this.doctor = {
-        name: data.name || 'Unknown',
-        degree: data.degree || 'N/A',
-        specialization: data.specialization || 'General',
-        years_of_experience: data.years_of_experience || 0,
-        bio: data.bio || 'No bio available.',
-        blacklisted: data.blacklisted || false,
-        departments: data.departments || [] 
-      };
-    })
-    .catch(error => {
-      this.error = error.message;
-    })
-    .finally(() => {
-      this.loading = false;
-    });
-},
+    loadDoctor() {
+        this.loading = true;
+        return authFetchWithRetry(`/api/doctor/${this.doctorId}`, {  // ✅ authFetchWithRetry + return
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(response => {
+            if (!response) return null;                   // ✅ !r guard
+            if (response.status === 401) { localStorage.clear(); this.$router.push('/login'); return null; }
+            if (!response.ok) throw new Error('Failed to load doctor');
+            return response.json();
+        })
+        .then(data => {
+            if (!data) return;                            // ✅ null guard
+            this.doctor = {
+                name: data.name || 'Unknown',
+                degree: data.degree || 'N/A',
+                specialization: data.specialization || 'General',
+                years_of_experience: data.years_of_experience || 0,
+                bio: data.bio || 'No bio available.',
+                blacklisted: data.blacklisted || false,
+                departments: data.departments || []
+            };
+        })
+        .catch(error => {
+            this.error = error.message;
+        })
+        .finally(() => {
+            this.loading = false;
+        });
+    },
 
-goAvailability() {
-  if (!this.doctor.departments || this.doctor.departments.length === 0) {
-    alert('Doctor does not have any department assigned');
-    return;
-  }
-  
-  const deptId = this.doctor.departments[0];
-  
-  authFetch(`/api/department/${deptId}`, {
-    headers: {
-      'Content-Type': 'application/json',
-    }
-  })
-    .then(res => {
-      if (!res.ok) throw new Error('Failed to load department');
-      return res.json();
-    })
-    .then(deptData => {
-      this.$router.push({ 
-        path: `/availability/${this.doctorId}/${encodeURIComponent(deptData.name)}` 
-      });
-    })
-    .catch(err => {
-      console.error('Error:', err);
-      alert('Unable to load department information');
-    });
-},
+    goAvailability() {
+        if (!this.doctor.departments || this.doctor.departments.length === 0) {
+            alert('Doctor does not have any department assigned');
+            return;
+        }
+        const deptId = this.doctor.departments[0];
+        return authFetchWithRetry(`/api/department/${deptId}`, {  // ✅ authFetchWithRetry + return
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(res => {
+            if (!res) return null;                        // ✅ !r guard
+            if (res.status === 401) { localStorage.clear(); this.$router.push('/login'); return null; }
+            if (!res.ok) throw new Error('Failed to load department');
+            return res.json();
+        })
+        .then(deptData => {
+            if (!deptData) return;                        // ✅ null guard
+            this.$router.push({
+                path: `/availability/${this.doctorId}/${encodeURIComponent(deptData.name)}`
+            });
+        })
+        .catch(err => {
+            console.error('Error:', err);
+            alert('Unable to load department information');
+        });
+    },
 
     goBack() {
-      this.$router.go(-1);
+        this.$router.go(-1);
     }
-  }
+}
 };

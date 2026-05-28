@@ -157,67 +157,66 @@ export default {
 
   methods: {
     loadSlots() {
-      return authFetch('/api/availabilities', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      })
-      
-      .then(r => {
-        if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return []; }
-        if (r.status === 403) { return []; }  // ← add this
-        return r.json();
-    })
-    .then(data => { this.slots = Array.isArray(data) ? data : []; })  // ← add Array.isArray check
-    .catch(() => { this.slots = []; });
-
-
-    },
-    addSlot() {
-      if (!this.newSlot.day_of_week || !this.newSlot.start_time || !this.newSlot.end_time || !this.newSlot.date) {
-        alert('Please fill all fields!');
-        return;
-      }
-      if (this.newSlot.start_time >= this.newSlot.end_time) {
-        alert('End time must be after start time!');
-        return;
-      }
-      authFetch('/api/availabilities', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(this.newSlot)
-      })
-      
-   .then(async r => {
-    if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return; }
-    const body = await r.json();
-    if (!r.ok) { alert(body.message || 'Failed to add slot'); return; }
-    alert('Slot added successfully!');
-    this.newSlot = { date: '', day_of_week: '', start_time: '', end_time: '', is_active: true };
-    this.loadSlots();
-  })
-.catch(() => alert('Failed to add slot'));
-    },
-    deleteSlot(id) {
-      if (!confirm('Are you sure you want to delete this slot?')) return;
-      authFetch(`/api/doctor/availability/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      })
-      .then(r => {
-            if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return; }
+        return authFetchWithRetry('/api/availabilities', {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(r => {
+            if (!r) return null;
+            if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return null; }
+            if (r.status === 403) { return null; }
             return r.json();
         })
-      .then(() => {
-        alert('Slot deleted successfully!');
-        this.loadSlots();
-      })
-      .catch(() => alert('Failed to delete slot'));
+        .then(data => {
+            if (!data) return;                              // ✅ !data guard
+            if (data !== null) this.slots = Array.isArray(data) ? data : [];
+        })
+        .catch(() => { this.slots = []; });
+    },
+
+    addSlot() {
+        if (!this.newSlot.day_of_week || !this.newSlot.start_time || !this.newSlot.end_time || !this.newSlot.date) {
+            alert('Please fill all fields!');
+            return;
+        }
+        if (this.newSlot.start_time >= this.newSlot.end_time) {
+            alert('End time must be after start time!');
+            return;
+        }
+        return authFetchWithRetry('/api/availabilities', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(this.newSlot)
+        })
+        .then(async r => {
+            if (!r) return null;                            // ✅ !r guard
+            if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return null; }
+            const body = await r.json();
+            if (!r.ok) { alert(body.message || 'Failed to add slot'); return; }
+            alert('Slot added successfully!');
+            this.newSlot = { date: '', day_of_week: '', start_time: '', end_time: '', is_active: true };
+            return this.loadSlots();
+        })
+        .catch(() => alert('Failed to add slot'));
+    },
+
+    deleteSlot(id) {
+        if (!confirm('Are you sure you want to delete this slot?')) return;
+        return authFetchWithRetry(`/api/doctor/availability/${id}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(r => {
+            if (!r) return null;
+            if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return null; }
+            return r.json();
+        })
+        .then(data => {
+            if (!data) return;                              // ✅ !data guard
+            alert('Slot deleted successfully!');
+            this.loadSlots();
+        })
+        .catch(() => alert('Failed to delete slot'));
     }
-  }
+}
 }

@@ -3,7 +3,12 @@ export default {
     <div class="row border d-flex wall" style="height: 700px; overflow: auto;">
       <div class="col-12 border p-4" style="overflow-y: auto;">
         <div class="card shadow p-3 bg-white">
-          
+
+        <div v-if="loading" class="text-center py-3">
+            <div class="spinner-border text-primary"></div>
+            <p class="mt-2">Loading...</p>
+        </div>
+          <div v-else>
           <!-- Header -->
           <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Manage Departments</h5>
@@ -78,20 +83,16 @@ export default {
                     </td>
                   </tr>
 
-                  <tr v-if="!loading && departments.length === 0">
+                  <tr v-if="departments.length === 0">
                     <td colspan="4" class="text-center">No departments found</td>
                   </tr>
                 </tbody>
               </table>
             </div>
 
-            <!-- Loading -->
-            <div v-if="loading" class="text-center py-3">
-              <div class="spinner-border text-primary"></div>
-              <p class="mt-2">Loading...</p>
-            </div>
+           
           </div> <!-- /.card-body -->
-
+          </div>
         </div> <!-- /.card -->
       </div> <!-- /.col-12 -->
     </div> <!-- /.row -->
@@ -105,99 +106,116 @@ export default {
       newDept: { name: '', description: '' }
     };
   },
-  created() {
-    this.loadDepartments();
-  },
+ async mounted() {
+    await this.loadDepartments();
+},
   methods: {
     headers() {
-      return {
-        'Content-Type': 'application/json',
-      };
+        return { 'Content-Type': 'application/json' };
     },
+
     loadDepartments() {
-      this.loading = true;
-      authFetch('/api/departments', { headers: this.headers() })
-        .then(r => r.json())
+        this.loading = true;
+        return authFetchWithRetry('/api/departments', { headers: this.headers() })  // ✅
+        .then(r => {
+            if (!r) return null;                          // ✅ !r guard
+            if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return null; }
+            return r.json();
+        })
         .then(list => {
-          this.departments = Array.isArray(list) ? list.map(d => ({ ...d, _edit: false })) : [];
+            if (list === null) return;                    // ✅ null guard
+            this.departments = Array.isArray(list) ? list.map(d => ({ ...d, _edit: false })) : [];
         })
         .catch(() => {
-          alert('Failed to load departments');
-          this.departments = [];
+            alert('Failed to load departments');
+            this.departments = [];
         })
         .finally(() => (this.loading = false));
     },
+
     addDepartment() {
-      if (!this.newDept.name || !this.newDept.description) {
-        alert('Name and description are required');
-        return;
-      }
-      this.adding = true;
-      authFetch('/api/departments', {
-        method: 'POST',
-        headers: this.headers(),
-        body: JSON.stringify({
-          name: this.newDept.name,
-          description: this.newDept.description
+        if (!this.newDept.name || !this.newDept.description) {
+            alert('Name and description are required');
+            return;
+        }
+        this.adding = true;
+        return authFetchWithRetry('/api/departments', {   // ✅ authFetchWithRetry + return
+            method: 'POST',
+            headers: this.headers(),
+            body: JSON.stringify({
+                name: this.newDept.name,
+                description: this.newDept.description
+            })
         })
-      })
         .then(async r => {
-          const body = await r.json().catch(() => ({}));
-          if (!r.ok) throw new Error(body.message || 'Add failed');
-          this.newDept = { name: '', description: '' };
-          this.loadDepartments();
+            if (!r) return null;                          // ✅ !r guard
+            if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return null; }
+            const body = await r.json().catch(() => ({}));
+            if (!r.ok) throw new Error(body.message || 'Failed');
+            if (!body) return;                            // ✅ !data guard
+            this.newDept = { name: '', description: '' };
+            this.loadDepartments();
         })
         .catch(err => alert(err.message))
         .finally(() => (this.adding = false));
     },
+
     startEdit(d) {
-      d._edit = true;
-      d._name = d.name;
-      d._description = d.description;
+        d._edit = true;
+        d._name = d.name;
+        d._description = d.description;
     },
+
     cancelEdit(d) {
-      d._edit = false;
-      delete d._name;
-      delete d._description;
+        d._edit = false;
+        delete d._name;
+        delete d._description;
     },
+
     saveEdit(d) {
-      const payload = {};
-      if (d._name !== d.name) payload.name = d._name;
-      if (d._description !== d.description) payload.description = d._description;
-
-      if (Object.keys(payload).length === 0) {
-        this.cancelEdit(d);
-        return;
-      }
-
-      authFetch(`/api/department/${d.id}`, {
-        method: 'PUT',
-        headers: this.headers(),
-        body: JSON.stringify(payload)
-      })
-        .then(async r => {
-          const body = await r.json().catch(() => ({}));
-          if (!r.ok) throw new Error(body.message || 'Update failed');
-          d.name = d._name;
-          d.description = d._description;
-          this.cancelEdit(d);
+        const payload = {};
+        if (d._name !== d.name) payload.name = d._name;
+        if (d._description !== d.description) payload.description = d._description;
+        if (Object.keys(payload).length === 0) {
+            this.cancelEdit(d);
+            return;
+        }
+        return authFetchWithRetry(`/api/department/${d.id}`, {  // ✅ authFetchWithRetry + return
+            method: 'PUT',
+            headers: this.headers(),
+            body: JSON.stringify(payload)
         })
-        .catch(err => alert(err.message));
-    },
-    deleteDepartment(id) {
-      if (!confirm('Delete this department?')) return;
-      this.deletingId = id;
-      authFetch(`/api/department/${id}`, {
-        method: 'DELETE',
-        headers: this.headers()
-      })
         .then(async r => {
-          const body = await r.json().catch(() => ({}));
-          if (!r.ok) throw new Error(body.message || 'Delete failed');
-          this.departments = this.departments.filter(d => d.id !== id);
+            if (!r) return null;                          // ✅ !r guard
+            if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return null; }
+            const body = await r.json().catch(() => ({}));
+            if (!r.ok) throw new Error(body.message || 'Failed');
+            if (!body) return;                            // ✅ !data guard
+            d.name = d._name;
+            d.description = d._description;
+            this.cancelEdit(d);
+        })
+        .catch(err => alert(err.message))
+        .finally(() => {});                               // ✅ .finally for consistency
+    },
+
+    deleteDepartment(id) {
+        if (!confirm('Delete this department?')) return;
+        this.deletingId = id;
+        return authFetchWithRetry(`/api/department/${id}`, {  // ✅ authFetchWithRetry + return
+            method: 'DELETE',
+            headers: this.headers()
+        })
+        .then(async r => {
+            if (!r) return null;                          // ✅ !r guard
+            if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return null; }
+            const body = await r.json().catch(() => ({}));
+            if (!r.ok) throw new Error(body.message || 'Failed');
+            if (!body) return;                            // ✅ !data guard
+            this.departments = this.departments.filter(d => d.id !== id);
         })
         .catch(err => alert(err.message))
         .finally(() => (this.deletingId = null));
     }
-  }
+}
 };

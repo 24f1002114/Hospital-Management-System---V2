@@ -1,8 +1,9 @@
 export default {
   template: `
-  <div class="row wall border d-flex" style="height: 700px; overflow: auto;">
-    <div class="col-12 p-4 border" style="overflow-y: auto;">
-      <div class="card shadow p-3 bg-white">
+  <div class="container-fluid wall" style="min-height: 400px;" class="overflow-auto;">
+    <div class="row">
+    <div class="col-12 p-2 p-md-4">
+      <div class="card shadow p-2 p-md-3 bg-white">
 
       <div v-if="loading" class="text-center p-5">
           <div class="spinner-border text-primary"></div>
@@ -17,7 +18,9 @@ export default {
         </div>
 
         <div class="card-body">
-          <h6 class="mb-3"><i class="bi bi-calendar-check me-2 text-primary"></i> Past/Upcoming appointments</h6>
+          <div class="bg-gradient" style="background: linear-gradient(135deg, #0d6efd 0%, #0dcaf0 100%); padding: 1rem; border-radius: 0.5rem 0.5rem 0 0; margin: -2rem -2rem 1rem -2rem;">
+            <h6 class="mb-0 text-white"><i class="bi bi-calendar-check me-2"></i>Past/Upcoming Appointments</h6>
+          </div>
 
           <div class="table-responsive border rounded" style="max-height: 520px; overflow-y: auto;">
             <table class="table table-hover table-bordered mb-0">
@@ -70,11 +73,11 @@ export default {
             </table>
           </div>
           </div>
-
         </div>
+       </div>
+      </div>
       </div>
     </div>
-  </div>
   `,
   data() {
     return {
@@ -92,73 +95,78 @@ export default {
     ]);
     this.loading = false;
   },
-  methods: {
+methods: {
     createAvailability() {
-      const id = localStorage.getItem('user_id');
-      this.$router.push({ path: `/create/availability/${id}` });
+        const id = localStorage.getItem('user_id');
+        this.$router.push({ path: `/create/availability/${id}` });
     },
+
     loadAppointments() {
-      authFetch('/api/appointments', {
-        method: 'GET',
-        headers: {
-          "Content-Type": "application/json",
-        }
-      })
-         .then(r => {
-        if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return []; }
-        if (r.status === 404) { return []; }
-        return r.json();
-    })
-    .then(data => { this.appointments = Array.isArray(data) ? data : []; })
-    .catch(() => { this.appointments = []; });
-    
-  },
-    cancelAppointment(id) {
-      if (!confirm("Cancel this appointment?")) return;
-      if (this.cancellingId) return;
-      this.cancellingId = id;
-      authFetch(`/api/appointment/${id}`, {
-        method: 'PUT',
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ status: 'Cancelled' })
-      })
+        return authFetchWithRetry('/api/appointments', {  // ✅ added return
+            method: 'GET',
+            headers: { "Content-Type": "application/json" }
+        })
         .then(r => {
-          if (!r.ok) throw new Error();
-          alert("Cancelled successfully");
-          return this.loadAppointments();
+            if (!r) return null;                          // ✅ !r guard
+            if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return null; }
+            if (r.status === 404) { return []; }
+            return r.json();
+        })
+        .then(data => { 
+            if (data !== null) this.appointments = Array.isArray(data) ? data : []; // ✅ null guard
+        })
+        .catch(() => { this.appointments = []; });
+    },
+
+    cancelAppointment(id) {
+        if (!confirm("Cancel this appointment?")) return;
+        if (this.cancellingId) return;
+        this.cancellingId = id;
+        return authFetchWithRetry(`/api/appointment/${id}`, {  // ✅ authFetchWithRetry + return
+            method: 'PUT',
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: 'Cancelled' })
+        })
+        .then(r => {
+            if (!r) return null;                          // ✅ !r guard
+            if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return null; }
+            if (!r.ok) throw new Error();
+            alert("Cancelled successfully");
+            return this.loadAppointments();
         })
         .catch(() => alert("Error cancelling"))
         .finally(() => { this.cancellingId = null; });
     },
+
     loadPatientHistory(patientId, department) {
-      this.$router.push({ path: `/patient/history/${patientId}/${department}` });
+        this.$router.push({ path: `/patient/history/${patientId}/${department}` });
     },
+
     updateHistory(appointmentId) {
-      this.$router.push({ path: `/update/patient/history/${appointmentId}` });
+        this.$router.push({ path: `/update/patient/history/${appointmentId}` });
     },
+
     loadDoctorName(id) {
-      const doctorId = id || localStorage.getItem('user_id') || this.$route.params.user_id;
-      if (!doctorId) {
-        this.doctorName = "";
-        return;
-      }
-      authFetch(`/api/doctor/${doctorId}`, {
-        method: 'GET',
-        headers: {
-          "Content-Type": "application/json",
+        const doctorId = id || localStorage.getItem('user_id') || this.$route.params.user_id;
+        if (!doctorId) {
+            this.doctorName = "";
+            return;
         }
-      })
-      .then(r => {
-            if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return; }
+        return authFetchWithRetry(`/api/doctor/${doctorId}`, {  // ✅ authFetchWithRetry + return
+            method: 'GET',
+            headers: { "Content-Type": "application/json" }
+        })
+        .then(r => {
+            if (!r) return null;                          // ✅ !r guard
+            if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return null; }
             if (!r.ok) throw new Error('Failed to fetch doctor');
             return r.json();
         })
-      .then(data => {
-        this.doctorName = data.name || `${data.first_name || ''} ${data.last_name || ''}`.trim();
-      })
-      .catch(() => { this.doctorName = "Unknown Doctor"; });
+        .then(data => {
+            if (!data) return;                            // ✅ null guard
+            this.doctorName = data.name || `${data.first_name || ''} ${data.last_name || ''}`.trim();
+        })
+        .catch(() => { this.doctorName = "Unknown Doctor"; });
     }
-  }
+}
 };

@@ -1,8 +1,9 @@
 export default {
   template: `
-    <div class="row wall border d-flex" style="height: 750px; overflow: auto;"> 
-      <div class="col-12 p-4 border" style="overflow-y: auto;">
-        <div class="card shadow p-3 bg-white"> 
+    <div class="container-fluid wall" style="min-height: 400px;" class="overflow-auto"> 
+      <div class="row">
+      <div class="col-12 p-2 p-md-4">
+        <div class="card shadow p-2 p-md-3 bg-white"> 
           <div class="card-body">
 
             <!-- Header -->
@@ -105,7 +106,8 @@ export default {
       treatments: [],
       patientInfo: null,
       department: 'All',
-      loading: true
+      loading: true,
+      patientId: null
     };
   },
 
@@ -115,30 +117,33 @@ export default {
     }
   },
 
-  created() {
+  async mounted() {
     this.patientId = this.$route.params.patient_id;
     this.department = this.$route.params.department || 'All';
-    this.loadTreatments();
-  },
+    await this.loadTreatments();
+},
 
   methods: {
     loadTreatments() {
       this.loading = true;
       
       // Build query params for filtering by patient
-      const params = new URLSearchParams();
       
-      authFetch(`/api/treatments?${params.toString()}`, {
+      
+      return authFetchWithRetry(`/api/treatments`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         }
       })
         .then(response => {
-          if (!response.ok) throw new Error(`Server error: ${response.status}`);
-          return response.json();
+            if (!response) return null;                    // ✅ !r guard
+            if (response.status === 401) { localStorage.clear(); this.$router.push('/login'); return null; }
+            if (!response.ok) throw new Error(`Server error: ${response.status}`);
+            return response.json();
         })
         .then(data => {
+          if (!data) return;                              // ✅ null guard
           let allTreatments = Array.isArray(data) ? data : [];
           
           // Filter by patient ID (comparing with current patient or route param)
@@ -179,14 +184,19 @@ export default {
     loadPatientInfo() {
       const targetPatientId = parseInt(this.patientId) || parseInt(localStorage.getItem('user_id'));
       
-      authFetch(`/api/patient/${targetPatientId}`, {
+      return authFetchWithRetry(`/api/patient/${targetPatientId}`, {    // ✅ authFetchWithRetry + return
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         }
       })
-        .then(response => response.json())
+        .then(response => {
+            if (!response) return null;                    // ✅ !r guard
+            if (response.status === 401) { localStorage.clear(); this.$router.push('/login'); return null; }
+            return response.json();
+        })
         .then(data => {
+          if (!data) return;                              // ✅ null guard
           this.patientInfo = {
             patient_name: data.name || 'Unknown'
           };

@@ -1,8 +1,9 @@
 export default {    
     template: `
-    <div class="row border d-flex wall" style="height: 700px; overflow: auto;"> 
-      <div class="col-12 border p-4" style="overflow-y: auto;">
-         <div class="card shadow p-3 bg-white"> 
+    <div class="container-fluid wall" style="min-height: 400px;" class="overflow-auto"> 
+      <div class="row">
+      <div class="col-12 p-2 p-md-4">
+         <div class="card shadow p-2 p-md-3 bg-white"> 
 
          <div v-if="loading" class="text-center p-5">
             <div class="spinner-border text-primary"></div>
@@ -24,11 +25,13 @@ export default {
 
                <!-- Departments Section -->
                <div class="mb-4">
-                 <h5 class="mb-3">
-                   <i class="bi bi-hospital me-2 text-primary"></i>Departments
-                 </h5>
-                 <div class="table-responsive border rounded" style="max-height: 200px; overflow-y: auto;">
-                      <table class="table table-hover table-bordered mb-0">
+                 <div class="bg-gradient" style="background: linear-gradient(135deg, #0d6efd 0%, #0dcaf0 100%); padding: 0.75rem 1rem; border-radius: 0.5rem 0.5rem 0 0; margin-bottom: 0;">
+                   <h5 class="mb-0 text-white">
+                     <i class="bi bi-hospital me-2"></i>Departments
+                   </h5>
+                 </div>
+                 <div class="table-responsive border border-top-0 rounded-bottom">
+                      <table class="table table-sm table-hover table-bordered mb-0">
                       <thead class="table-dark sticky-top">
                           <tr>
                           <th scope="col" style="width: 10%;" class="text-center">SN</th>
@@ -60,11 +63,13 @@ export default {
                 
                 <!-- Appointments Section -->
                 <div>
-                  <h5 class="mb-3">
-                    <i class="bi bi-calendar-check me-2 text-success"></i>Your Appointments
-                  </h5>
-                  <div class="table-responsive border rounded" style="max-height: 200px; overflow-y: auto;">
-                    <table class="table table-hover table-bordered mb-0">
+                  <div class="bg-gradient" style="background: linear-gradient(135deg, #198754 0%, #20c997 100%); padding: 0.75rem 1rem; border-radius: 0.5rem 0.5rem 0 0; margin-bottom: 0;">
+                    <h5 class="mb-0 text-white">
+                      <i class="bi bi-calendar-check me-2"></i>Your Appointments
+                    </h5>
+                  </div>
+                  <div class="table-responsive border border-top-0 rounded-bottom">
+                    <table class="table table-sm table-hover table-bordered mb-0">
                       <thead class="table-dark sticky-top">
                         <tr>
                           <th scope="col" style="width: 5%;" class="text-center">SN</th>
@@ -119,6 +124,7 @@ export default {
         </div>
        </div>
       </div>
+      </div>
     </div>`,
     data() {
         return {
@@ -140,17 +146,19 @@ export default {
     },
     methods: {
         loadDepartments() {
-            authFetch('/api/departments', {
+            return authFetchWithRetry('/api/departments', {      // ✅ authFetchWithRetry + return
                 method: 'GET',
                 headers: {
                     "Content-Type": "application/json",
                 }
             })
             .then(r => {
-                if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return; }
+                if (!r) return null;                            // ✅ !r guard
+                if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return null; }
                 return r.json();
             })
             .then(data => {
+                if (!data) return;                              // ✅ !data guard
                 this.departments = Array.isArray(data) ? data : [];
             })
             .catch(error => {
@@ -160,14 +168,17 @@ export default {
         },
         // FIX
         loadAppointments() {
-            return authFetch('/api/appointments', { method: 'GET',
+            return authFetchWithRetry('/api/appointments', {     // ✅ authFetchWithRetry + return
+                method: 'GET',
                 headers: { "Content-Type": "application/json" }
             })
             .then(r => {
-                if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return; }
+                if (!r) return null;                            // ✅ !r guard
+                if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return null; }
                 return r.json();
             })
             .then(data => {
+                if (!data) return;                              // ✅ !data guard
                 this.appointments = Array.isArray(data) ? data : [];
             })
             .catch(error => {
@@ -184,7 +195,7 @@ export default {
                 if (this.cancellingId) return;   
                 this.cancellingId = id;          
                 
-            authFetch(`/api/appointment/${id}`, {
+            return authFetchWithRetry(`/api/appointment/${id}`, {  // ✅ authFetchWithRetry + return
                 method: 'PUT',
                 headers: {
                     "Content-Type": "application/json",
@@ -192,6 +203,8 @@ export default {
                 body: JSON.stringify({ status: 'Cancelled' })
             })
             .then(response => {
+                if (!response) throw new Error('No response');   // ✅ !r guard
+                if (response.status === 401) { localStorage.clear(); this.$router.push('/login'); return; }
                 if (!response.ok) {
                     throw new Error('Failed to cancel appointment');
                 }
@@ -212,13 +225,18 @@ export default {
             this.$router.push(`/patient/history/${patientId}/All`);
         },
         loadPatientName() {
-            authFetch(`/api/patient/${localStorage.getItem('user_id')}`, { method: 'GET' })
+            return authFetchWithRetry(`/api/patient/${localStorage.getItem('user_id')}`, {  // ✅ authFetchWithRetry + return
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' }
+            })
             .then(r => {
-                if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return; }
+                if (!r) return null;                            // ✅ !r guard
+                if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return null; }
                 return r.json();
             })
             .then(data => {
-                this.patientName = data?.name || 'Patient';  // ← safe fallback
+                if (!data) return;                              // ✅ !data guard
+                this.patientName = data?.name || 'Patient';
             })
             .catch(err => console.error('Error loading name:', err));
         }

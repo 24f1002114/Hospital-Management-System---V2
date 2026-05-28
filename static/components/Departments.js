@@ -96,40 +96,44 @@ export default {
       error: null
     };
   },
-  created() {
-    this.loadDepartmentDetails(this.$route.params.id);
-  },
-  methods: {
+ async mounted() {
+    await this.loadDepartmentDetails(this.$route.params.id);
+},
+methods: {
     loadDepartmentDetails(id) {
-      this.loading = true;
-      authFetch(`/api/department/${id}`, {
-        headers: { 
-          'Content-Type': 'application/json',
-        }
-      })
+        this.loading = true;
+        return authFetchWithRetry(`/api/department/${id}`, {
+            headers: { 'Content-Type': 'application/json' }
+        })
         .then(res => {
-          if (!res.ok) throw new Error('Failed to load department');
-          return res.json();
+            if (!res) return null;                          // ✅ !r guard
+            if (res.status === 401) { localStorage.clear(); this.$router.push('/login'); return null; }
+            if (!res.ok) throw new Error('Failed to load department');
+            return res.json();
         })
         .then(data => {
-          this.department = data;
-          this.doctors = data.doctors || [];
+            if (!data) return;                             // ✅ null guard
+            this.department = data;
+            this.doctors = data.doctors || [];
         })
         .catch(err => {
-          this.error = err.message || 'Failed to load department details';
+            this.error = err.message || 'Failed to load department details';
         })
         .finally(() => {
-          this.loading = false;
+            this.loading = false;
         });
     },
+
     CheckAvailability(id) {
-      this.$router.push(`/availability/${id}/${this.department.name}`);
+        this.$router.push(`/availability/${id}/${encodeURIComponent(this.department.name)}`);
     },
+
     viewDetails(id) {
-      this.$router.push(`/doctor/${id}`);
+        this.$router.push(`/doctor/${id}`);
     },
+
     goBack() {
-      this.$router.go(-1);
+        this.$router.go(-1);
     }
-  }
+}
 };

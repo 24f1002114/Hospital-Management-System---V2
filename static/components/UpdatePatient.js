@@ -1,9 +1,17 @@
 export default{
  template: `
-      <div class="row justify-content-center  border d-flex align-items-center wall " style="height: 700px; overflow: auto;"> 
-      <div class="col-12 col-md-10 col-lg-10  mt-2 mb-2"> 
-      <div class="card shadow p-3 bg-light"> 
-         <div class="card-body ">
+      <div class="container-fluid formbg p-2 p-md-4" style="min-height: 500px;"> 
+      <div class="row">
+      <div class="col-12 col-md-8 col-lg-6 mx-auto"> 
+      <div class="card shadow p-2 p-md-3 bg-light"> 
+         <div class="card-body">
+         
+         <div v-if="loading" class="text-center p-5">
+            <div class="spinner-border text-primary"></div>
+            <p class="mt-2">Loading...</p>
+        </div>
+        <div v-else>
+
         <h2 class="text-center mb-4 mt-4">Update Profile</h2>
 
                  <form @submit.prevent="SavePatient">
@@ -43,17 +51,24 @@ export default{
                             </div>                
                         </div>
                     <div class="text-center mt-3">
-                        <button type="submit" class="btn btn-primary px-4">Update</button>
+                        <button type="submit" class="btn btn-primary px-4" :disabled="saving">
+                            {{ saving ? 'Updating...' : 'Update' }}
+                        </button>
                     </div>
                     </div>
                 </form>
             </div>
             </div>
+            </div>
+        </div>
+       </div>
+      </div>
       </div>
     </div>`,
-
-    data: function(){
+    data() {
         return {
+            loading: true,
+            saving: false,
             patient: {
                 name: '',
                 age: '',
@@ -65,46 +80,60 @@ export default{
             patientId: null
         }
     },
-    created(){
-        const patientId = this.$route.params.id;
-        this.FetchPatientData(patientId);
-        this.patientId = parseInt(patientId);
+    async mounted() {
+    this.patientId = parseInt(this.$route.params.id);
+    await this.FetchPatientData(this.patientId);
+    this.loading = false;
     },
  
     methods: {
 
         FetchPatientData(id){
-            authFetch(`/api/patient/${id}`, {
+            return authFetchWithRetry(`/api/patient/${id}`, {    // ✅ authFetchWithRetry + return
                 method: "GET",
                 headers: {
                     'content-type': 'application/json',
                 }
             })
-            .then(response => response.json())
+            .then(r => {
+                if (!r) return null;                        // ✅ !r guard
+                if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return null; }
+                return r.json();
+            })
             .then(data => {
+                if (!data) return;                          // ✅ null guard
                 this.patient = data;
                 console.log('Success:', data);
+                return data;                                // ✅ Return to complete promise chain
             })
             .catch(error => console.error('Error:', error));   
         },
 
         SavePatient(){
-            authFetch(`/api/patient/${this.patientId}`, {
+            if (this.saving) return;
+            this.saving = true;
+            return authFetchWithRetry(`/api/patient/${this.patientId}`, {  // ✅ authFetchWithRetry + return
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json', 
                 },
                 body: JSON.stringify(this.patient)  
                 })
-                .then(response => response.json())
-                .then(data => {
-                this.patient = data;
-                console.log('Success:', data);
-                alert('Patient profile updated successfully');
-                this.FetchPatientData(this.patientId);
-                //this.$router.push('/admin');
+                .then(r => {
+                    if (!r) throw new Error('No response');         // ✅ !r guard
+                    if (r.status === 401) { localStorage.clear(); this.$router.push('/login'); return; }
+                    if (!r.ok) throw new Error('Failed to update');
+                    return r.json();
                 })
-                .catch(error => console.error('Error:', error));
+                .then(data => {
+                    if (!data) return;                          // ✅ null guard
+                    this.patient = data;
+                    console.log('Success:', data);
+                    alert('Patient profile updated successfully');
+                    return this.FetchPatientData(this.patientId);  // ✅ Wait for refresh to complete
+                })
+                .catch(error => console.error('Error:', error))
+                .finally(() => { this.saving = false; });
             } 
 
         }

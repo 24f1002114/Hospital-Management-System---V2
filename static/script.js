@@ -29,7 +29,6 @@ window.authFetch = function(url, options = {}) {
 };
 
 
-
 const routes = [
   { path: '/', component: Home },
   { path: '/login', component: Login },
@@ -50,6 +49,41 @@ const routes = [
 ]
 
 const router = new VueRouter({ routes })
+
+window.authFetchWithRetry = function(url, options = {}, retryCount = 0) {
+    const clonedOptions = {
+        ...options,
+        headers: { ...options.headers }
+    };
+    return authFetch(url, clonedOptions)
+        .then(r => {
+            if (r.status === 401) {
+                if (retryCount < 2) {
+                    return new Promise(resolve =>
+                        setTimeout(() => resolve(
+                            authFetchWithRetry(url, options, retryCount + 1)
+                        ), 1000)
+                    );
+                }
+                localStorage.clear();
+                router.push('/login');
+                return null;
+            }
+            return r;
+        })
+        .catch(err => {
+            if (retryCount < 2) {
+                return new Promise(resolve =>
+                    setTimeout(() => resolve(
+                        authFetchWithRetry(url, options, retryCount + 1)
+                    ), 1000)
+                );
+            }
+            console.error('Network error after retries:', err);
+            return null;
+        });
+};
+
 
 router.beforeEach((to, from, next) => {
   const authToken = localStorage.getItem('auth_token')
