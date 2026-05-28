@@ -110,7 +110,7 @@ export default {
 
     async function loadDoctor() {
       try {
-        const { data } = await api.get(`/api/doctor/${doctorId}`)
+        const { data } = await api.get(`doctor/${doctorId}`)
         doctor.value = {
           name: data.name || 'Unknown',
           degree: data.degree || 'N/A',
@@ -134,7 +134,7 @@ export default {
       }
       try {
         const deptId = doctor.value.departments[0]
-        const { data } = await api.get(`/api/department/${deptId}`)
+        const { data } = await api.get(`department/${deptId}`)
         router.push(`/availability/${doctorId}/${encodeURIComponent(data.name)}`)
       } catch (err) {
         console.error(err)

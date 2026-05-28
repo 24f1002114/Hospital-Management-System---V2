@@ -146,13 +146,13 @@ export default {
     const patientName = ref('')
 
     async function loadDepartments() {
-      const { data } = await api.get('/api/departments')
+      const { data } = await api.get('departments')
       departments.value = Array.isArray(data) ? data : []
     }
 
     async function loadAppointments() {
       try {
-        const { data } = await api.get('/api/appointments')
+        const { data } = await api.get('appointments')
         // Client-side validation: ensure all appointments belong to current patient
         appointments.value = Array.isArray(data) 
           ? data.filter(app => app.patient_id === auth.userId)
@@ -164,7 +164,7 @@ export default {
     }
 
     async function loadPatientName() {
-      const { data } = await api.get(`/api/patient/${auth.userId}`)
+      const { data } = await api.get(`patient/${auth.userId}`)
       patientName.value = data?.name || 'Patient'
     }
 
@@ -173,7 +173,7 @@ export default {
       if (cancellingId.value) return
       cancellingId.value = id
       try {
-        await api.put(`/api/appointment/${id}`, { status: 'Cancelled' })
+        await api.put(`appointment/${id}`, { status: 'Cancelled' })
         alert('Appointment cancelled successfully!')
         await loadAppointments()
       } catch {

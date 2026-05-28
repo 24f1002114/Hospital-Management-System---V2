@@ -104,7 +104,7 @@ export default {
 
     async function loadDepartmentDetails(id) {
       try {
-        const { data } = await api.get(`/api/department/${id}`)
+        const { data } = await api.get(`department/${id}`)
         department.value = data
         doctors.value = data.doctors || []
       } catch (err) {

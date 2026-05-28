@@ -143,7 +143,7 @@ export default {
 
     async function fetchDoctorData() {
       try {
-        const { data } = await api.get(`/api/doctor/${doctorId}`)
+        const { data } = await api.get(`doctor/${doctorId}`)
         Object.assign(doctor, data)
       } catch (err) {
         console.error('Fetch Doctor Error:', err)
@@ -152,7 +152,7 @@ export default {
 
     async function loadDepartments() {
       try {
-        const { data } = await api.get('/api/departments')
+        const { data } = await api.get('departments')
         departments.value = Array.isArray(data) ? data : []
       } catch (err) {
         console.error('Load Departments Error:', err)
@@ -163,7 +163,7 @@ export default {
       if (saving.value) return
       saving.value = true
       try {
-        await api.put(`/api/doctor/${doctorId}`, doctor)
+        await api.put(`doctor/${doctorId}`, doctor)
         alert('Doctor profile updated successfully!')
         await fetchDoctorData()
       } catch (err) {

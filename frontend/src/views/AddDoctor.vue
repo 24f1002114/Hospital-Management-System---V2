@@ -135,7 +135,7 @@ export default {
 
     async function getDepartments() {
       try {
-        const { data } = await api.get('/api/departments')
+        const { data } = await api.get('departments')
         departments.value = Array.isArray(data) ? data : []
       } catch (err) {
         console.error('Get Departments Error:', err)
@@ -146,7 +146,7 @@ export default {
       if (saving.value) return
       saving.value = true
       try {
-        const { data } = await api.post('/api/doctors', doctor)
+        const { data } = await api.post('doctors', doctor)
         alert(data.message)
         router.push('/admin')
       } catch (err) {

@@ -146,14 +146,14 @@ export default {
 
     async function loadSlots() {
       try {
-        const { data } = await api.get(`/api/availabilities/${doctorId}`)
+        const { data } = await api.get(`availabilities/${doctorId}`)
         slots.value = Array.isArray(data) ? data : []
       } catch { slots.value = [] }
     }
 
     async function loadAppointments() {
       try {
-        const { data } = await api.get('/api/appointments')
+        const { data } = await api.get('appointments')
         // Client-side validation: ensure all appointments belong to current patient
         appointments.value = Array.isArray(data)
           ? data.filter(app => app.patient_id === auth.userId)
@@ -179,7 +179,7 @@ export default {
       if (processing.value) return
       processing.value = true
       try {
-        const { data } = await api.post('/api/appointments', {
+        const { data } = await api.post('appointments', {
           doctor_id: doctorId,
           department: departmentName,
           slot_id: slotId
@@ -203,7 +203,7 @@ export default {
       if (processing.value) return
       processing.value = true
       try {
-        await api.delete(`/api/appointment/${appointmentId}`)
+        await api.delete(`appointment/${appointmentId}`)
         alert('Appointment cancelled successfully!')
         await Promise.all([loadSlots(), loadAppointments()])
       } catch (err) {

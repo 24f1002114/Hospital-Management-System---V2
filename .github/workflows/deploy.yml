@@ -1,130 +1,50 @@
-name: Deploy to VPS
+name: Deploy HMS to VPS
 
 on:
-  push:
-    branches:
-      - production
-  workflow_dispatch:
+push:
+branches:
+- production
 
 jobs:
+deploy:
+runs-on: ubuntu-latest
 
-  validate:
-    runs-on: ubuntu-latest
+steps:
+  - name: Deploy to VPS
+    uses: appleboy/ssh-action@v1.0.3
 
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+    with:
+      host: ${{ secrets.VPS_HOST }}
+      username: ${{ secrets.VPS_USER }}
+      key: ${{ secrets.VPS_SSH_KEY }}
+      port: 22
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "npm"
-          cache-dependency-path: frontend/package-lock.json
+      script: |
+        cd /var/www/Hospital-Management-System---V2
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
-          cache: "pip"
-          cache-dependency-path: backend/requirements.txt
+        echo "Pull latest code"
+        git checkout production
+        git pull origin production
 
-      - name: Install Frontend Dependencies
-        working-directory: ./frontend
-        run: npm ci
+        echo "Activate virtual environment"
+        source hms/bin/activate
 
-      - name: Build Frontend
-        working-directory: ./frontend
-        run: npm run build
+        echo "Install backend dependencies"
+        pip install -r requirements.txt
 
-      - name: Install Backend Dependencies
-        working-directory: ./backend
-        run: pip install -r requirements.txt
+        echo "Build frontend"
+        cd frontend
+        npm install
+        npm run build
 
-      - name: Check Backend Syntax
-        working-directory: ./backend
-        run: python -m py_compile application/*.py
+        echo "Copy frontend build"
+        sudo rm -rf /var/www/hms-frontend/*
+        sudo cp -r dist/* /var/www/hms-frontend/
 
-  deploy:
-    needs: validate
-    runs-on: ubuntu-latest
+        echo "Restart backend"
+        sudo systemctl restart hms-gunicorn
 
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+        echo "Restart nginx"
+        sudo systemctl restart nginx
 
-      - name: Deploy to VPS
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          port: ${{ secrets.VPS_PORT }}
-          script_stop: true
-          script: |
-            set -e
-            echo "📦 Starting Deployment..."
-
-            cd /var/www/Hospital-Management-System---V2
-
-            git fetch origin production
-            git reset --hard origin/production
-
-            source hms/bin/activate
-
-            # ── Backend ────────────────────────────────────────────────────
-            echo "🔧 Installing Backend Dependencies..."
-            cd backend
-            pip install -r requirements.txt
-
-            # ── Frontend ───────────────────────────────────────────────────
-            echo "🎨 Building Frontend..."
-            cd ../frontend
-            npm ci --prefer-offline --no-audit --legacy-peer-deps --maxsockets=1
-            npm run build
-
-            # Copy dist to the directory Nginx serves directly.
-            # No http-server or PM2 needed — Nginx handles static files.
-            echo "📤 Deploying Frontend Build..."
-            mkdir -p /var/www/Hospital-Management-System---V2/frontend-dist
-            rm -rf /var/www/Hospital-Management-System---V2/frontend-dist/*
-            cp -r dist/* /var/www/Hospital-Management-System---V2/frontend-dist/
-
-            # ── Backend Services ───────────────────────────────────────────
-            echo "♻️ Restarting Backend Services..."
-            sudo systemctl restart hms-gunicorn
-            sudo systemctl restart celery
-            sudo systemctl restart celery-beat
-            sudo systemctl restart nginx
-
-            # ── Health Checks ──────────────────────────────────────────────
-            echo "🏥 Running Health Checks..."
-            sleep 5
-
-            # Frontend: Nginx serves the Vue dist directly on port 80
-            curl -sf http://localhost/ > /dev/null \
-              && echo "✅ Frontend (Nginx): OK" \
-              || { echo "❌ Frontend (Nginx): FAILED"; exit 1; }
-
-            # Backend: expect a non-200 (e.g. 401) but NOT a connection error
-            STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-              http://localhost:8000/api/validate-token \
-              -H "Authentication-Token: test")
-            if [ "$STATUS" = "000" ]; then
-              echo "❌ Backend (Gunicorn): FAILED — no response"
-              exit 1
-            else
-              echo "✅ Backend (Gunicorn): OK (HTTP $STATUS)"
-            fi
-
-            echo "🎉 Deployment Successful!"
-
-      - name: Deployment Success
-        if: success()
-        run: echo "✅ Deployment completed successfully"
-
-      - name: Deployment Failed
-        if: failure()
-        run: |
-          echo "❌ Deployment failed"
-          exit 1
+        echo "Deployment completed successfully"

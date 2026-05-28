@@ -88,7 +88,7 @@ export default {
       if (saving.value) return
       saving.value = true
       try {
-        const res = await api.post('/api/register', formData.value)
+        const res = await api.post('register', formData.value)
         if (res.data.success === true) {
           alert('Registration successful!')
           router.push('/login')

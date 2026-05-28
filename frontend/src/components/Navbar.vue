@@ -98,12 +98,12 @@ export default {
 
     function csvExport() {
       menuOpen.value = false
-      api.post('/api/export')
+      api.post('export')
         .then(res => {
           const taskId = res.data.id
           const timer = setInterval(async () => {
             try {
-              const r = await api.get(`/api/csv_result/${taskId}`, {
+              const r = await api.get(`csv_result/${taskId}`, {
                 responseType: 'blob',
                 validateStatus: s => s === 200 || s === 202
               })

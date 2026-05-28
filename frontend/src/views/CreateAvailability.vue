@@ -144,7 +144,7 @@ export default {
 
     async function loadSlots() {
       try {
-        const { data } = await api.get('/api/availabilities')
+        const { data } = await api.get('availabilities')
         slots.value = Array.isArray(data) ? data : []
       } catch (err) {
         console.error(err)
@@ -163,7 +163,7 @@ export default {
         return
       }
       try {
-        const { data } = await api.post('/api/availabilities', newSlot.value)
+        const { data } = await api.post('availabilities', newSlot.value)
         alert(data.message || 'Slot added successfully!')
         newSlot.value = { date: '', day_of_week: '', start_time: '', end_time: '', is_active: true }
         await loadSlots()
@@ -175,7 +175,7 @@ export default {
     async function deleteSlot(id) {
       if (!confirm('Are you sure you want to delete this slot?')) return
       try {
-        const { data } = await api.delete(`/api/doctor/availability/${id}`)
+        const { data } = await api.delete(`doctor/availability/${id}`)
         alert(data.message || 'Slot deleted successfully!')
         await loadSlots()
       } catch (err) {

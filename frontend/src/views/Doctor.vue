@@ -110,7 +110,7 @@ export default {
 
     async function loadAppointments() {
       try {
-        const { data } = await api.get('/api/appointments')
+        const { data } = await api.get('appointments')
         // Client-side validation: ensure all appointments belong to current doctor
         appointments.value = Array.isArray(data)
           ? data.filter(app => app.doctor_id === auth.userId)
@@ -122,7 +122,7 @@ export default {
     }
 
     async function loadDoctorName() {
-      const { data } = await api.get(`/api/doctor/${auth.userId}`)
+      const { data } = await api.get(`doctor/${auth.userId}`)
       doctorName.value = data.name || ''
     }
 
@@ -131,7 +131,7 @@ export default {
       if (cancellingId.value) return
       cancellingId.value = id
       try {
-        await api.put(`/api/appointment/${id}`, { status: 'Cancelled' })
+        await api.put(`appointment/${id}`, { status: 'Cancelled' })
         alert('Cancelled successfully')
         await loadAppointments()
       } catch {

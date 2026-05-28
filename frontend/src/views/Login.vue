@@ -37,7 +37,7 @@ export default {
     async function loginUser() {
       loading.value = true
       try {
-        const res = await api.post('/api/login', formData.value)
+        const res = await api.post('login', formData.value)
         if (res.data.success) {
           auth.login(res.data)
           if (res.data.roles.includes('admin')) router.push('/admin')

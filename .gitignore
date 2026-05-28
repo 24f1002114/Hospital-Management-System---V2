@@ -20,3 +20,5 @@ NGINX_MONITORING_GUIDE.md
 NGINX_MYAPP_CONFIG.md
 CI_CD_SETUP.md
 VPS_CONFIG_GUIDE.md
+hms-frontend.service
+lib

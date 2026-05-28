@@ -201,27 +201,27 @@ export default {
     const PsearchType = ref('')
 
     async function loadDoctors() {
-      const { data } = await api.get('/api/doctors')
+      const { data } = await api.get('doctors')
       doctors.value = Array.isArray(data) ? data : []
     }
 
     async function loadPatients() {
-      const { data } = await api.get('/api/patients')
+      const { data } = await api.get('patients')
       patients.value = Array.isArray(data) ? data : []
     }
 
     async function loadAppointments() {
-      const { data } = await api.get('/api/appointments')
+      const { data } = await api.get('appointments')
       appointments.value = Array.isArray(data) ? data : []
     }
 
     async function searchDoctors() {
-      const { data } = await api.get(`/api/search/doctors?query=${DsearchQuery.value}&type=${DsearchType.value}`)
+      const { data } = await api.get(`search/doctors?query=${DsearchQuery.value}&type=${DsearchType.value}`)
       doctors.value = Array.isArray(data) ? data : []
     }
 
     async function searchPatients() {
-      const { data } = await api.get(`/api/search/patients?query=${PsearchQuery.value}&type=${PsearchType.value}`)
+      const { data } = await api.get(`search/patients?query=${PsearchQuery.value}&type=${PsearchType.value}`)
       patients.value = Array.isArray(data) ? data : []
     }
 
@@ -239,27 +239,27 @@ export default {
 
     async function deleteDoctor(id) {
       if (!confirm('Are you sure you want to delete this doctor?')) return
-      const { data } = await api.delete(`/api/doctor/${id}`)
+      const { data } = await api.delete(`doctor/${id}`)
       alert(data.message)
       loadDoctors()
     }
 
     async function deletePatient(id) {
       if (!confirm('Are you sure you want to delete this patient?')) return
-      const { data } = await api.delete(`/api/patient/${id}`)
+      const { data } = await api.delete(`patient/${id}`)
       alert(data.message)
       loadPatients()
     }
 
     async function blacklist(id) {
-      const { data } = await api.post(`/api/user/${id}/blacklist`, { user_id: id })
+      const { data } = await api.post(`user/${id}/blacklist`, { user_id: id })
       alert(data.message)
       loadDoctors()
       loadPatients()
     }
 
     async function removeBlacklist(id) {
-      const { data } = await api.delete(`/api/user/${id}/blacklist`)
+      const { data } = await api.delete(`user/${id}/blacklist`)
       alert(data.message)
       loadDoctors()
       loadPatients()

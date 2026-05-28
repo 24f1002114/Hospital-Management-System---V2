@@ -29,7 +29,7 @@ export default {
       if (token) {
         try {
           // Try to access a protected endpoint to validate token
-          const res = await api.get('/api/validate-token')
+          const res = await api.get('validate-token')
           // Token is valid, auth store already has the data from localStorage
           if (!auth.isLoggedIn) {
             auth.restoreFromStorage()

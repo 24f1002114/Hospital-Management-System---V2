@@ -152,7 +152,7 @@ export default {
       saving.value = true
 
       try {
-        const response = await api.post('/api/treatments', {
+        const response = await api.post('treatments', {
           appointment_id: appointmentId.value,
           ...form.value
         })

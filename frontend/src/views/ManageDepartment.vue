@@ -132,7 +132,7 @@ export default {
     async function loadDepartments() {
       loading.value = true
       try {
-        const { data } = await api.get('/api/departments')
+        const { data } = await api.get('departments')
         departments.value = Array.isArray(data)
           ? data.map(d => ({ ...d, _edit: false }))
           : []
@@ -152,7 +152,7 @@ export default {
       }
       adding.value = true
       try {
-        await api.post('/api/departments', {
+        await api.post('departments', {
           name: newDept.value.name,
           description: newDept.value.description
         })
@@ -186,7 +186,7 @@ export default {
         return
       }
       try {
-        await api.put(`/api/department/${d.id}`, payload)
+        await api.put(`department/${d.id}`, payload)
         d.name = d._name
         d.description = d._description
         cancelEdit(d)
@@ -199,7 +199,7 @@ export default {
       if (!confirm('Delete this department?')) return
       deletingId.value = id
       try {
-        await api.delete(`/api/department/${id}`)
+        await api.delete(`department/${id}`)
         departments.value = departments.value.filter(d => d.id !== id)
       } catch (err) {
         alert(err.response?.data?.message || 'Failed to delete department')

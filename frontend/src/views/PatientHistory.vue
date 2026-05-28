@@ -118,7 +118,7 @@ export default {
     async function loadPatientInfo() {
       const targetId = parseInt(patientId) || parseInt(auth.userId)
       try {
-        const { data } = await api.get(`/api/patient/${targetId}`)
+        const { data } = await api.get(`patient/${targetId}`)
         patientInfo.value = { patient_name: data.name || 'Unknown' }
       } catch (err) {
         console.error('Error loading patient info:', err)
@@ -128,7 +128,7 @@ export default {
     async function loadTreatments() {
       loading.value = true
       try {
-        const { data } = await api.get('/api/treatments')
+        const { data } = await api.get('treatments')
         const targetId = parseInt(patientId) || parseInt(auth.userId)
         let all = Array.isArray(data) ? data : []
 

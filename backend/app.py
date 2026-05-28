@@ -17,7 +17,15 @@ load_dotenv()
 
 def create_app():
     app = Flask(__name__)
-    CORS(app)
+    
+    ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(",")
+
+    CORS(app,
+     origins=ALLOWED_ORIGINS,
+     supports_credentials=True,
+     allow_headers=["Content-Type", "Authorization", "Authentication-Token"],
+     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
+    
     env = os.getenv("ENV", "dev")
     if env == "prod":
         app.config.from_object(ProductionConfig)

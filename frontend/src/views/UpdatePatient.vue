@@ -95,7 +95,7 @@ export default {
 
     async function fetchPatientData() {
       try {
-        const { data } = await api.get(`/api/patient/${patientId}`)
+        const { data } = await api.get(`patient/${patientId}`)
         Object.assign(patient, data)
       } catch (err) {
         console.error('Fetch Patient Error:', err)
@@ -106,7 +106,7 @@ export default {
       if (saving.value) return
       saving.value = true
       try {
-        await api.put(`/api/patient/${patientId}`, patient)
+        await api.put(`patient/${patientId}`, patient)
         alert('Patient profile updated successfully!')
         await fetchPatientData()
       } catch (err) {
