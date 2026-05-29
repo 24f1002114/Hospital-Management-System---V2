@@ -110,6 +110,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/utils/api'
+import { useAuthStore } from '@/stores/auth'
 
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 const DAY_ORDER = { Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4, Friday: 5, Saturday: 6, Sunday: 7 }
@@ -117,6 +118,8 @@ const DAY_ORDER = { Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4, Friday: 5,
 export default {
   setup() {
     const router = useRouter()
+    const auth = useAuthStore()   
+    auth.restoreFromStorage()
     const loading = ref(true)
     const slots = ref([])
     const newSlot = ref({
@@ -147,6 +150,7 @@ export default {
         const { data } = await api.get('availabilities')
         slots.value = Array.isArray(data) ? data : []
       } catch (err) {
+	console.error('Full error:', err.response?.data) 
         console.error(err)
         slots.value = []
       }
@@ -184,6 +188,7 @@ export default {
     }
 
     onMounted(async () => {
+      auth.restoreFromStorage()     
       await loadSlots()
       loading.value = false
     })

@@ -104,6 +104,7 @@ export default {
   setup() {
     const route = useRoute()
     const auth = useAuthStore()
+    auth.restoreFromStorage()    
     const loading = ref(true)
     const treatments = ref([])
     const patientInfo = ref(null)
@@ -145,7 +146,9 @@ export default {
         if (all.length > 0) {
           patientInfo.value = { patient_name: all[0].patient_name }
         } else {
-          await loadPatientInfo()
+		if (!auth.isDoctor) {
+                await loadPatientInfo()
+            }
         }
       } catch (err) {
         console.error('Error loading treatments:', err)

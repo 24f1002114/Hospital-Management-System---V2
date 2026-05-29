@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 Type=simple
-WorkingDirectory=/var/www/Hospital-Management-System---V2/frontend-dist
+WorkingDirectory=/var/www/Hospital-Management-System---V2/hms-frontend
 ExecStart=/usr/bin/serve -s . -l 3000
 Restart=always
 RestartSec=5
