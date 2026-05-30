@@ -1,0 +1,10 @@
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.env
+instance/
+celerybeat-schedule
+dump.rdb
+*.log
+.git/

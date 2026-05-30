@@ -55,8 +55,7 @@ jobs:
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          port: ${{ secrets.VPS_PORT }}
+          key: ${{ secrets.VPS_SSH_KEY }}          
           script_stop: true
           script: |
             set -e
@@ -67,38 +66,14 @@ jobs:
             git fetch origin production
             git reset --hard origin/production
 
-            source hms/bin/activate
+            # ── Docker Deploy ──────────────────────────────────────────────
+            echo "🐳 Building and Starting Docker Containers..."
+            docker compose down
+            docker compose up --build -d
 
-            # ── Backend ────────────────────────────────────────────────────
-            echo "🔧 Installing Backend Dependencies..."
-            cd backend
-            pip install -r requirements.txt
-
-            # ── Frontend ───────────────────────────────────────────────────
-            echo "🎨 Building Frontend..."
-            cd ../frontend
-            npm ci --prefer-offline --no-audit --legacy-peer-deps --maxsockets=1
-            npm run build
-
-            # Copy dist to frontend server directory
-            echo "📤 Deploying Frontend Build..."
-            mkdir -p /var/www/hms-frontend
-            rm -rf /var/www/hms-frontend/*
-            cp -r dist/* /var/www/hms-frontend/
-
-            # Setup Frontend Systemd Service
-            echo "⚙️ Setting up Frontend Service..."
-            sudo cp /var/www/Hospital-Management-System---V2/hms-frontend.service /etc/systemd/system/
-            sudo systemctl daemon-reload
-            sudo systemctl enable hms-frontend
-            sudo systemctl restart hms-frontend
-
-            # ── Backend Services ───────────────────────────────────────────
-            echo "♻️ Restarting Backend Services..."
-            sudo systemctl restart hms-gunicorn
-            sudo systemctl restart celery
-            sudo systemctl restart celery-beat
-            sudo systemctl restart nginx
+            # ── Health Check ───────────────────────────────────────────────
+            echo "🔍 Checking Container Status..."
+            docker compose ps
 
             echo "🎉 Deployment Successful!"
 

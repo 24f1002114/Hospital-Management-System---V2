@@ -59,11 +59,8 @@
                         <td>{{ slot.end_time }}</td>
                         <td><span class="badge bg-danger">Booked</span></td>
                         <td>
-                          <button
-                            class="btn btn-sm btn-danger"
-                            :disabled="processing"
-                            @click="cancelAppointment(getAppointmentBySlot(slot.id))"
-                          >Cancel</button>
+                          <button class="btn btn-sm btn-danger" :disabled="processing"
+                            @click="cancelAppointment(getAppointmentBySlot(slot.id))">Cancel</button>
                         </td>
                       </tr>
 
@@ -87,11 +84,8 @@
                         <td>{{ slot.end_time }}</td>
                         <td><span class="badge bg-success">Free</span></td>
                         <td>
-                          <button
-                            class="btn btn-sm btn-primary"
-                            :disabled="processing"
-                            @click="bookAppointment(slot.id)"
-                          >Book</button>
+                          <button class="btn btn-sm btn-primary" :disabled="processing"
+                            @click="bookAppointment(slot.id)">Book</button>
                         </td>
                       </tr>
 
@@ -115,7 +109,7 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/utils/api'
@@ -213,13 +207,13 @@ export default {
       }
     }
 
-    onMounted(async () => {
-      try {
-        await Promise.all([loadSlots(), loadAppointments()])
-      } finally {
-        ready.value = true
-      }
-    })
+   onMounted(async () => {
+  try {
+    await Promise.all([loadSlots(), loadAppointments()])
+  } finally {
+    ready.value = true
+  }
+})
 
     return {
       ready, processing,
