@@ -47,6 +47,12 @@ class ProductionConfig(Config):
     CACHE_DEFAULT_TIMEOUT = 300
     CACHE_KEY_PREFIX = 'hms_cache_'
     SQLALCHEMY_ENGINE_OPTIONS = {
-        "connect_args": {"options": "-ctimezone=Asia/Kolkata"}
+    "pool_pre_ping": True,
+    "pool_recycle": 300,
+    "pool_reset_on_return": "rollback",
+    "connect_args": {
+        "connect_timeout": 10,
+        "options": "-ctimezone=Asia/Kolkata"
+    }
     }
 

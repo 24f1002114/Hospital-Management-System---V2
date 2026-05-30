@@ -38,9 +38,12 @@ def create_app():
     db.init_app(app)
     cache.init_app(app)
     api.init_app(app)
+    @app.teardown_appcontext
+    def shutdown_session(exception=None):
+        db.session.remove()
     datastore = SQLAlchemyUserDatastore(db, User, Role)
     app.security = Security(app, datastore)
-    app.app_context().push()
+    #app.app_context().push()
     return app
 
 
@@ -48,7 +51,10 @@ app = create_app()
 celery = celery_init_app(app)
 celery.autodiscover_tasks()
 
+#from application.routes import *
+
 with app.app_context():
+    import application.routes
     db.create_all()
     app.security.datastore.find_or_create_role(name = "admin", description = "Superuser of app")
     app.security.datastore.find_or_create_role(name = "doctor", description = "General user of app")
@@ -61,7 +67,7 @@ with app.app_context():
                                            roles = ['admin'])
     db.session.commit()      
 
-from application.routes import *
+
 
 @celery.on_after_finalize.connect
 def setup_periodic_tasks(sender, **kwargs):
