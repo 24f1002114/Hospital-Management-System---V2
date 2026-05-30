@@ -18,7 +18,7 @@ COPY . .
 EXPOSE 8000
 
 CMD ["gunicorn", \
-     "--workers", "3", \
+     "--workers", "1", \
      "--worker-class", "sync", \
      "--bind", "0.0.0.0:8000", \
      "--timeout", "120", \
