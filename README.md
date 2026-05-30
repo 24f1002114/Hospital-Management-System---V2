@@ -1,4 +1,4 @@
-# 🏥 Hospital Management System - V2
+# 🏥 Hospital Management System 
 
 **Modern Application Development - II Project**
 
@@ -6,7 +6,7 @@
 
 ---
 
-**Name:** Anshul Shakya
+**Name:** Anshul Shakya  
 **Email:** 24f1002114@ds.study.iitm.ac.in
 
 ---
@@ -15,7 +15,7 @@
 
 - **RBAC** — Token-based Admin/Doctor/Patient access control
 - **Admin** — Doctor CRUD, user blacklisting, department management
-- **Patient** — Registration, doctor search, appointment booking/rescheduling
+- **Patient** — Registration, doctor search, appointment booking
 - **Doctor** — Availability setting, appointment dashboard, treatment records
 - **Background Jobs** — Daily reminders, monthly reports, CSV export (Celery)
 - **Performance** — Redis caching on high-frequency endpoints (5–10 min TTL)
@@ -26,14 +26,15 @@
 
 | Layer | Tech |
 |-------|------|
-| Backend | Flask, Flask-RESTful, Flask-Security, SQLAlchemy|
-| Frontend | Vue.js (CLI) |
+| Backend | Flask, Flask-RESTful, Flask-Security, SQLAlchemy |
+| Frontend | Vue.js (Vite) |
 | Web Server | Nginx |
-| App Server | Gunicorn | 
+| App Server | Gunicorn (3 sync workers) |
 | Database | SQLite (local) / PostgreSQL (production) |
 | Cache | Redis |
 | Jobs | Celery, Celery Beat |
 | Email | Mailtrap |
+| Containerization | Docker, Docker Compose |
 | CI/CD | GitHub Actions → VPS via SSH |
 
 ---
@@ -44,29 +45,24 @@
 Browser
    │
    ▼
- Nginx
+ Nginx (hms-frontend container)
    ├── /        → serves Vue.js static build
    └── /api/    → proxy_pass to Gunicorn
                        │
-                       ├── PostgreSQL
-                       ├── Redis (cache)
-                       └── Celery + Celery Beat (background jobs)
+                       ├── PostgreSQL (host)
+                       ├── Redis (hms-redis container)
+                       └── Celery + Celery Beat (containers)
 ```
 
-### Architecture Table
+### Docker Services
 
-| Layer | Choice | Why |
-|-------|--------|-----|
-| Web Server | Nginx | Industry standard for static serving + reverse proxy |
-| App Server | Gunicorn | Production-grade WSGI server for Flask |
-| Backend | Flask | Lightweight, flexible, mature ecosystem |
-| Frontend | Vue.js (static build) | No SSR needed for authenticated dashboard, simpler and faster |
-| Database | PostgreSQL (prod) / SQLite (local) | Robust relational DB in prod, zero-config locally |
-| Cache | Redis | Reduces DB hits on high-frequency endpoints (5–10 min TTL) |
-| Background Jobs | Celery + Celery Beat | Industry standard for Python async tasks and scheduled jobs |
-| CI/CD | GitHub Actions | Zero infrastructure overhead, free for public repos |
-| Process Management | Systemd | Auto-restart on crash, native to Linux |
-
+| Container | Purpose |
+|-----------|---------|
+| `hms-frontend` | Nginx serving Vue.js build + API proxy |
+| `hms-backend` | Gunicorn running Flask (3 workers) |
+| `hms-celery` | Celery background task worker |
+| `hms-celery-beat` | Celery scheduled task runner |
+| `hms-redis` | Redis message broker + cache |
 
 ---
 
@@ -91,76 +87,68 @@ Browser
 | Patient | `/api/patients`, `/api/patient/<id>`, `/api/search/doctors`, `/api/appointments`, `/api/treatments` |
 | Doctor | `/api/availabilities`, `/api/doctor/availability/<id>`, `/api/appointments`, `/api/treatments` |
 
-> Complete API specification in `api.yaml`
-
 ---
 
 ## Local Development Setup
 
 ### Prerequisites
-- Python 3.10+
-- Node.js 20+ & npm
-- Redis
-- Mailtrap account
+- Docker & Docker Compose
+- PostgreSQL (local)
+- Git
 
-### Backend
+### Quick Start
 
 ```bash
-python3 -m venv venv
-source venv/bin/activate
-cd backend
-pip install -r requirements.txt
-python app.py
+git clone <repo-url>
+cd Hospital-Management-System---V2
+
+# Copy and fill in environment variables
+cp backend/application/.env.example backend/application/.env
+
+# Start all services
+docker compose up --build
 ```
 
-A default admin account is created automatically on first run. Update the credentials immediately after setup via the admin panel.
+**App URL:** http://localhost
+
+A default admin account is created on first run using `ADMIN_EMAIL` and `ADMIN_PASSWORD` from your `.env`.
 
 ### Local `.env`
 
-Copy `.env.example` to `.env` and fill in your values:
-
 ```env
 ENV=dev
-SECRET_KEY=
-MAIL_SERVER=sandbox.smtp.mailtrap.io
-MAIL_PORT=2525
-MAIL_USERNAME=
-MAIL_PASSWORD=
-MAIL_USE_TLS=True
-```
-
-### Frontend
-
-```bash
-cd frontend
-npm ci --legacy-peer-deps
-npm run dev
+SECRET_KEY=your-secret-key
+DATABASE_URL=postgresql://user:password@localhost:5432/dbname
+SQLALCHEMY_DATABASE_URI=postgresql://user:password@localhost:5432/dbname
+REDIS_URL=redis://localhost:6379/0
+ALLOWED_ORIGINS=http://localhost:5173,http://localhost
+ADMIN_EMAIL=your-admin-email
+ADMIN_PASSWORD=your-admin-password
 ```
 
 ---
 
-## Running Locally
-
-Run these **4 commands in separate terminals:**
+## Docker Commands
 
 ```bash
-# 1. Redis
-redis-server
+# Start all containers
+docker compose up -d
 
-# 2. Celery Worker
-source venv/bin/activate
-celery -A app.celery worker --loglevel INFO
+# Stop all containers
+docker compose down
 
-# 3. Celery Beat
-source venv/bin/activate
-celery -A app.celery beat --loglevel INFO
+# Rebuild and restart
+docker compose up --build -d
 
-# 4. Flask App
-source venv/bin/activate
-python app.py
+# View logs
+docker compose logs -f
+
+# View specific service logs
+docker compose logs -f backend
+
+# Check container status
+docker compose ps
 ```
-
-**Backend URL:** http://localhost:5000
 
 ---
 
@@ -185,13 +173,8 @@ Push to production
   │              deploy                 │
   │  ─ SSH into VPS                     │
   │  ─ git reset --hard origin/prod     │
-  │  ─ pip install                      │
-  │  ─ npm run build                    │
-  │  ─ copy dist to web root            │
-  │  ─ restart gunicorn                 │
-  │  ─ restart celery                   │
-  │  ─ restart celery-beat              │
-  │  ─ restart nginx                    │
+  │  ─ docker compose down              │
+  │  ─ docker compose up --build -d     │
   └─────────────────────────────────────┘
 ```
 
@@ -202,93 +185,90 @@ Push to production
 | `VPS_HOST` | VPS IP or domain |
 | `VPS_USER` | SSH username |
 | `VPS_SSH_KEY` | Private SSH key |
-| `VPS_PORT` | SSH port |
 
 ---
 
-## Nginx Config
+## Production Setup (VPS)
 
-Nginx serves the Vue.js static build and proxies all `/api/` requests to Gunicorn. The config handles Vue SPA routing by falling back to `index.html` for all unknown routes, and forwards the `Authentication-Token` header to Flask for auth.
+### Prerequisites
+- Ubuntu 24.04
+- Docker & Docker Compose installed
+- PostgreSQL installed and running
+- UFW firewall configured
 
----
-
-## Systemd Services
-
-The following services are managed on the VPS via systemd:
-
-| Service | Purpose |
-|---------|---------|
-| `hms-gunicorn` | Flask backend (3 sync workers) |
-| `hms-frontend` | Frontend static service |
-| `celery` | Background task worker |
-| `celery-beat` | Scheduled task runner |
-| `nginx` | Web server / reverse proxy |
+### Firewall Rules
 
 ```bash
-sudo systemctl restart hms-gunicorn celery celery-beat hms-frontend nginx
+sudo ufw allow ssh
+sudo ufw allow 80
+sudo ufw allow 443
+sudo ufw allow from 172.17.0.0/16 to any port 5432
+sudo ufw allow from 172.18.0.0/16 to any port 5432
+sudo ufw enable
 ```
 
----
+### PostgreSQL Configuration
 
-## PostgreSQL Setup (Production)
+Allow Docker containers to connect by adding to `pg_hba.conf`:
 
-Install PostgreSQL, create a database and user, then configure the connection string in your `.env` file. Set `ENV=prod` to switch from SQLite to PostgreSQL automatically.
+```
+host    hospitaldb    hospitaluser    172.17.0.0/16    md5
+host    hospitaldb    hospitaluser    172.18.0.0/16    md5
+```
+
+Set `listen_addresses = '*'` in `postgresql.conf` and restart PostgreSQL.
 
 ### Production `.env`
 
 ```env
 ENV=prod
-SECRET_KEY=
-DATABASE_URL=
-MAIL_SERVER=sandbox.smtp.mailtrap.io
-MAIL_PORT=2525
-MAIL_USERNAME=
-MAIL_PASSWORD=
-MAIL_USE_TLS=True
+SECRET_KEY=your-secret-key
+DATABASE_URL=postgresql://user:password@host.docker.internal:5432/dbname
+SQLALCHEMY_DATABASE_URI=postgresql://user:password@host.docker.internal:5432/dbname
+REDIS_URL=redis://hms-redis:6379/0
+ALLOWED_ORIGINS=http://your-domain-or-ip
+ADMIN_EMAIL=your-admin-email
+ADMIN_PASSWORD=your-admin-password
 ```
 
 > Never commit your `.env` file. Make sure it is listed in `.gitignore`.
 
 ---
 
-## Redis Cache
-
-```bash
-redis-cli ping                       # should return PONG
-redis-cli -n 2 KEYS hms_cache_*     # view cached keys
-redis-cli -n 2 FLUSHDB              # clear cache
-```
-
----
-
 ## Production Debugging
 
-### Service Status
+### Container Status
 ```bash
-sudo systemctl status hms-gunicorn
-sudo systemctl status celery
-sudo systemctl status celery-beat
-sudo systemctl status hms-frontend
-sudo systemctl status nginx
+docker compose ps
+docker compose logs -f
+docker compose logs -f backend
+docker compose logs -f celery
 ```
 
-### Live Logs
+### Resource Usage
 ```bash
-sudo tail -f /var/log/gunicorn/hms-access.log
-sudo tail -f /var/log/gunicorn/hms-error.log
-sudo journalctl -u hms-gunicorn -f
-sudo journalctl -u celery -f
-sudo journalctl -u nginx -f
+docker stats --no-stream
+free -h
+df -h
 ```
 
-### Nginx
+### Restart Services
 ```bash
-sudo nginx -t && sudo systemctl reload nginx
+docker compose restart backend
+docker compose restart celery
+docker compose down && docker compose up -d
+```
+
+### Redis
+```bash
+docker exec hms-redis redis-cli ping           # should return PONG
+docker exec hms-redis redis-cli -n 2 KEYS '*'  # view cached keys
+docker exec hms-redis redis-cli -n 2 FLUSHDB   # clear cache
 ```
 
 ### Ports
 ```bash
-sudo ss -tlnp | grep -E '80|443|8000'
+sudo ss -tlnp | grep -E '80|443|5432'
 ```
 
 ---
@@ -297,12 +277,13 @@ sudo ss -tlnp | grep -E '80|443|8000'
 
 | Issue | Fix |
 |-------|-----|
-| Redis connection error | Run `redis-server` |
-| Celery tasks not running | Check worker and beat terminals |
-| Port already in use | `lsof -ti:<port> \| xargs kill -9` |
-| PostgreSQL auth error | Use `sudo -u postgres psql` (peer auth) |
-| Nginx 502 Bad Gateway | Make sure gunicorn service is running |
-| GitHub Actions failing | Check all 4 secrets are set in repo settings |
+| Container not starting | `docker compose logs <service>` |
+| DB connection refused | Check UFW rules allow Docker subnet |
+| Port 80 already in use | Stop nginx systemd: `sudo systemctl stop nginx` |
+| Redis connection error | Check `hms-redis` container is running |
+| 403 on API routes | Clear browser localStorage and re-login |
+| Workers crashing | Check `docker compose logs backend` for errors |
+| GitHub Actions failing | Check all secrets are set in repo settings |
 
 ---
 

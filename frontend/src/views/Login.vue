@@ -44,11 +44,20 @@ export default {
           else if (res.data.roles.includes('doctor')) router.push('/doctor')
           else if (res.data.roles.includes('patient')) router.push('/patient')
           else alert('Unknown role!')
-        } else {
-          alert('Login failed: ' + res.data.message)
         }
       } catch (err) {
-        alert('An error occurred during login. Please try again.')
+        const status = err.response?.status
+        const message = err.response?.data?.message
+
+        if (status === 400 && message === 'Email and password are required!') {
+          alert('Please enter both email and password.')
+        } else if (status === 404) {
+          alert('No account found with this email.')
+        } else if (status === 400) {
+          alert('Incorrect password. Please try again.')
+        } else {
+          alert('Something went wrong. Please try again.')
+        }
       } finally {
         loading.value = false
       }

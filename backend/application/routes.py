@@ -11,9 +11,9 @@ from .task import csv_report
 from flask_security import auth_required, roles_required, roles_accepted, current_user,login_user
 
 
-@app.route("/", methods = ["GET"])
+@app.route("/", methods=["GET"])
 def home():
-    return render_template("index.html")
+    return {"message": "HMS API is running"}, 200
 
 @app.route("/api/login", methods=["POST"])
 def user_login():

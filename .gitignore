@@ -1,7 +1,7 @@
 .env/
 .env
 __pycache__/
-reference.txt
+reference.md
 instance/
 celerybeat-schedule
 dump.rdb
@@ -11,13 +11,5 @@ venv/
 *.csv
 productionCheck.md
 hms/
-RESPONSIVE_APPLIED.md
-RESPONSIVE_CHECKLIST.md
-RESPONSIVE_DESIGN_GUIDE.md
-MIGRATION_FIXES.md
-NGINX_CONFIG_REVIEW.md
-NGINX_MONITORING_GUIDE.md
-NGINX_MYAPP_CONFIG.md
-CI_CD_SETUP.md
-VPS_CONFIG_GUIDE.md
+
 

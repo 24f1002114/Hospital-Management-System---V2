@@ -60,15 +60,17 @@ with app.app_context():
     app.security.datastore.find_or_create_role(name = "doctor", description = "General user of app")
     app.security.datastore.find_or_create_role(name = "patient", description = "General user of app")
     db.session.commit()
-    if not app.security.datastore.find_user(email = "admin@example.com"):
-        app.security.datastore.create_user(email = "admin@example.com",
-                                           username = "admin",
-                                           password = generate_password_hash("1234"),
-                                           roles = ['admin'])
-    db.session.commit()      
+    admin_email = os.getenv("ADMIN_EMAIL")
+    admin_password = os.getenv("ADMIN_PASSWORD")
+    if admin_email and admin_password:
+        if not app.security.datastore.find_user(email = admin_email):
+            app.security.datastore.create_user(email = admin_email,
+                                            username = "admin",
+                                            password = generate_password_hash(admin_password),
+                                            roles = ['admin'])
+        db.session.commit()      
 
-
-
+# Setup periodic tasks
 @celery.on_after_finalize.connect
 def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(
