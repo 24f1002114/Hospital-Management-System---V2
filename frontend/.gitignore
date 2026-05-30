@@ -41,3 +41,11 @@ __screenshots__/
 .env.production
 src_backup
 libhms-frontend.service
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Docker
+.dockerignore
