@@ -16,7 +16,7 @@ services:
     container_name: hms-backend
     restart: unless-stopped
     extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - "host.docker.internal:${DOCKER_HOST_IP:-host-gateway}"
     env_file:
       - ./backend/application/.env
     environment:
@@ -38,7 +38,7 @@ services:
     container_name: hms-celery
     restart: unless-stopped
     extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - "host.docker.internal:${DOCKER_HOST_IP:-host-gateway}"
     command: celery -A app.celery worker --loglevel=info --concurrency=1
     env_file:
       - ./backend/application/.env
@@ -58,7 +58,7 @@ services:
     container_name: hms-celery-beat
     restart: unless-stopped
     extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - "host.docker.internal:${DOCKER_HOST_IP:-host-gateway}"
     command: celery -A app.celery beat --loglevel=info
     env_file:
       - ./backend/application/.env
