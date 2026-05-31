@@ -1,17 +1,44 @@
 services:
-  # ── Redis (message broker for Celery) ─────────────────
+  # ── Redis ─────────────────────────────────────────────
   redis:
     image: redis:7-alpine
     container_name: hms-redis
     restart: unless-stopped
     networks:
       - hms-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  # ── Backend (Flask + Gunicorn) ─────────────────────────
+  # ── PostgreSQL ─────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: hms-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: hospital_user
+      POSTGRES_PASSWORD: Hospital1234
+      POSTGRES_DB: hospital_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - hms-network
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hospital_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Backend ────────────────────────────────────────────
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
+      network: host
     container_name: hms-backend
     restart: unless-stopped
     extra_hosts:
@@ -20,18 +47,30 @@ services:
       - ./backend/application/.env
     environment:
       - ENV=prod
+    expose:
+      - "8000"
     volumes:
       - ./backend:/app
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
     networks:
       - hms-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/')"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
 
   # ── Celery Worker ──────────────────────────────────────
   celery:
     build:
       context: ./backend
       dockerfile: Dockerfile
+      network: host
     container_name: hms-celery
     restart: unless-stopped
     extra_hosts:
@@ -39,11 +78,15 @@ services:
     command: celery -A app.celery worker --loglevel=info --concurrency=1
     env_file:
       - ./backend/application/.env
+    environment:
+      - ENV=prod
     volumes:
       - ./backend:/app
     depends_on:
-      - redis
-      - backend
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
     networks:
       - hms-network
 
@@ -52,6 +95,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+      network: host
     container_name: hms-celery-beat
     restart: unless-stopped
     extra_hosts:
@@ -59,19 +103,24 @@ services:
     command: celery -A app.celery beat --loglevel=info
     env_file:
       - ./backend/application/.env
+    environment:
+      - ENV=prod
     volumes:
       - ./backend:/app
     depends_on:
-      - redis
-      - backend
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
     networks:
       - hms-network
 
-  # ── Frontend (Vue + Nginx) ─────────────────────────────
+  # ── Frontend ───────────────────────────────────────────
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      network: host
     container_name: hms-frontend
     restart: unless-stopped
     ports:
@@ -83,9 +132,13 @@ services:
       - ENV=${ENV}
       - DOMAIN=${DOMAIN}
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     networks:
       - hms-network
+
+volumes:
+  postgres_data:
 
 networks:
   hms-network:
