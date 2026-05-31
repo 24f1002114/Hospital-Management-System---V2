@@ -18,7 +18,7 @@ load_dotenv()
 def create_app():
     app = Flask(__name__)
     
-    ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(",")
+    ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS").split(",")
 
     CORS(app,
      origins=ALLOWED_ORIGINS,

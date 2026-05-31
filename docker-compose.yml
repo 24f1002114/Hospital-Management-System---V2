@@ -1,5 +1,4 @@
 services:
-
   # ── Redis (message broker for Celery) ─────────────────
   redis:
     image: redis:7-alpine
@@ -27,8 +26,6 @@ services:
       - redis
     networks:
       - hms-network
-    
-    
 
   # ── Celery Worker ──────────────────────────────────────
   celery:
@@ -79,6 +76,12 @@ services:
     restart: unless-stopped
     ports:
       - "80:80"
+      - "443:443"
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    environment:
+      - ENV=${ENV}
+      - DOMAIN=${DOMAIN}
     depends_on:
       - backend
     networks:
