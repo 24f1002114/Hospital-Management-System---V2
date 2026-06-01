@@ -2,7 +2,7 @@
   <div class="container-fluid wall overflow-auto" style="min-height: 700px;">
     <div class="row justify-content-center">
       <div class="col-12 col-md-11 col-lg-10 mt-3 mb-3">
-        <div class="card shadow bg-white">
+        <div class="card shadow card-dark">
 
           <!-- Header -->
           <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
@@ -23,7 +23,7 @@
             <div v-else>
 
               <!-- Add Department Form -->
-              <div class="mb-4 border rounded p-3 bg-light">
+              <div class="mb-4 border rounded p-3 add-dept-form">
                 <h6 class="mb-3">Add Department</h6>
                 <div class="row g-2 align-items-end">
                   <div class="col-12 col-md-4">

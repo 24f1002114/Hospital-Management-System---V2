@@ -1,7 +1,7 @@
 <template>
-  <div class="row justify-content-center border d-flex align-items-center wall" style="height: 700px;">
-    <div class="col border p-3 formbg" style="max-width: 400px; height: 500px;">
-      <h2 class="text-center mb-4 mt-4">Login Form</h2>
+  <div class="login-container">
+    <div class="login-form-wrapper">
+      <h2 class="text-center mb-4">Login Form</h2>
       <form @submit.prevent="loginUser">
         <div class="mb-3">
           <label for="email">Email:<span class="required">*</span></label>
@@ -67,3 +67,46 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: var(--bg);
+}
+
+.login-form-wrapper {
+  background: var(--card);
+  padding: 40px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.login-form-wrapper h2 {
+  color: var(--text);
+  margin-bottom: 30px;
+  font-weight: 600;
+}
+
+.mb-3 label {
+  color: var(--text);
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.required {
+  color: #dc3545;
+}
+
+@media (max-width: 576px) {
+  .login-form-wrapper {
+    padding: 25px;
+  }
+}
+</style>

@@ -9,6 +9,21 @@
     --wall-color: #bddddf8a;
     --login-bg: #39d7ecd7;
     --touch-target: 44px;
+    
+    --bg: #f4f6f9;
+    --card: #ffffff;
+    --text: #1f2937;
+    --muted: #6b7280;
+    --border: rgba(0, 0, 0, 0.08);
+}
+
+/* Dark mode theme */
+html.dark-theme {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --text: #e5e7eb;
+    --muted: #94a3b8;
+    --border: rgba(255, 255, 255, 0.08);
 }
 
 /* ============================================
@@ -110,31 +125,34 @@ body {
 
 /* Form controls */
 .form-control,
-.form-select {
-    font-size: 1rem; /* 16px minimum on mobile to avoid zoom */
-    min-height: 44px;
-    padding: 0.75rem;
-}
-
-.form-label {
-    font-weight: 500;
-    margin-bottom: 0.5rem;
-    font-size: 0.875rem;
-}
-
-/* Input fields */
+.form-select,
 input[type="text"],
 input[type="email"],
 input[type="password"],
 input[type="tel"],
 input[type="date"],
 input[type="time"],
+input[type="number"],
+input[type="search"],
 textarea,
 select {
-    width: 100%;
-    max-width: 100%;
+    font-size: 1rem; /* 16px minimum on mobile to avoid zoom */
+    min-height: 44px;
+    padding: 0.75rem;
+    background-color: #ffffff;
+    color: #1f2937;
+    border: 1px solid rgba(0, 0, 0, 0.08);
     border-radius: 0.375rem;
 }
+
+.form-label {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+    color: #1f2937;
+}
+
+/* Input fields - consolidated with form controls above */
 
 /* Navbar improvements */
 .navbar {
@@ -443,4 +461,115 @@ select {
         border: 1px solid #000;
         padding: 6pt;
     }
+}
+
+/* ============================================
+   DARK MODE STYLES
+   ============================================ */
+
+html.dark-theme body {
+    background-color: var(--bg);
+    color: var(--text);
+}
+
+html.dark-theme .wall {
+    background: var(--bg);
+    color: var(--text);
+}
+
+html.dark-theme .navwall {
+    background: var(--card);
+    color: var(--text);
+    border-bottom: 1px solid var(--border);
+}
+
+html.dark-theme .formbg,
+html.dark-theme .card {
+    background-color: var(--card) !important;
+    color: var(--text) !important;
+    border-color: var(--border) !important;
+}
+
+html.dark-theme .form-control,
+html.dark-theme .form-select,
+html.dark-theme input[type="text"],
+html.dark-theme input[type="email"],
+html.dark-theme input[type="password"],
+html.dark-theme input[type="tel"],
+html.dark-theme input[type="date"],
+html.dark-theme input[type="time"],
+html.dark-theme input[type="number"],
+html.dark-theme input[type="search"],
+html.dark-theme textarea,
+html.dark-theme select {
+    background-color: var(--card) !important;
+    color: var(--text) !important;
+    border-color: var(--border) !important;
+}
+
+html.dark-theme .form-control::placeholder,
+html.dark-theme .form-select::placeholder,
+html.dark-theme input::placeholder,
+html.dark-theme textarea::placeholder {
+    color: var(--muted) !important;
+    opacity: 0.7;
+}
+
+html.dark-theme select option {
+    background-color: var(--card);
+    color: var(--text);
+}
+
+html.dark-theme select option:checked {
+    background-color: #0d6efd;
+    color: white;
+}
+
+html.dark-theme .form-label {
+    color: var(--text) !important;
+}
+
+html.dark-theme .table {
+    background-color: var(--card) !important;
+    color: var(--text) !important;
+}
+
+html.dark-theme .table thead th {
+    background-color: var(--bg) !important;
+    color: var(--text) !important;
+    border-color: var(--border) !important;
+}
+
+html.dark-theme .table tbody tr {
+    background-color: var(--card) !important;
+    color: var(--text) !important;
+    border-color: var(--border) !important;
+}
+
+html.dark-theme .table tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+html.dark-theme .navbar-text {
+    color: var(--text) !important;
+}
+
+html.dark-theme .btn-light {
+    background-color: var(--muted) !important;
+    color: var(--text) !important;
+    border-color: var(--border) !important;
+}
+
+html.dark-theme .modal-content {
+    background-color: var(--card) !important;
+    color: var(--text) !important;
+    border-color: var(--border) !important;
+}
+
+html.dark-theme .modal-header {
+    border-bottom-color: var(--border) !important;
+}
+
+html.dark-theme .modal-footer {
+    border-top-color: var(--border) !important;
 }

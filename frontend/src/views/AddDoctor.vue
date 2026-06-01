@@ -63,7 +63,7 @@
                       <label>Department <span class="required">*</span>
                         <small class="text-muted ms-2">(Select one or more)</small>
                       </label>
-                      <div class="border rounded p-2 bg-light" style="max-height: 120px; overflow-y: auto;">
+                      <div class="border rounded p-2 dept-checkbox-box" style="max-height: 120px; overflow-y: auto;">
                         <div v-for="dept in departments" :key="dept.id" class="form-check mb-1">
                           <input
                             class="form-check-input"

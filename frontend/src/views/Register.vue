@@ -1,6 +1,6 @@
 <template>
-  <div class="row justify-content-center border d-flex align-items-center wall" style="height: 700px; overflow: auto;">
-    <div class="col-12 col-md-10 col-lg-8 border p-4 mt-2 mb-2 formbg">
+  <div class="register-container">
+    <div class="register-form-wrapper">
       <h2 class="text-center mb-4">Registration Form</h2>
       <form @submit.prevent="addUser">
         <div class="row">
@@ -62,6 +62,49 @@
     </div>
   </div>
 </template>
+
+<style scoped>
+.register-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: var(--bg);
+}
+
+.register-form-wrapper {
+  background: var(--card);
+  padding: 40px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  width: 100%;
+  max-width: 800px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.register-form-wrapper h2 {
+  color: var(--text);
+  margin-bottom: 30px;
+  font-weight: 600;
+}
+
+.mb-3 label {
+  color: var(--text);
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.required {
+  color: #dc3545;
+}
+
+@media (max-width: 768px) {
+  .register-form-wrapper {
+    padding: 25px;
+  }
+}
+</style>
 
 <script>
 import { ref } from 'vue'

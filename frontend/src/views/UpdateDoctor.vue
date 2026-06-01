@@ -56,7 +56,7 @@
                     <!-- Current Departments -->
                     <div class="mb-3">
                       <label>Current Departments</label>
-                      <div class="border rounded p-2 bg-light">
+                      <div class="border rounded p-2 dept-display-box">
                         <span v-if="doctor.departments && doctor.departments.length > 0" class="d-flex flex-wrap gap-2">
                           <span v-for="deptId in doctor.departments" :key="deptId" class="badge bg-primary">
                             {{ getDepartmentName(deptId) }}
@@ -71,7 +71,7 @@
                       <label>Update Departments <span class="required">*</span>
                         <small class="text-muted ms-2">(Select one or more)</small>
                       </label>
-                      <div class="border rounded p-2 bg-white" style="max-height: 100px; overflow-y: auto;">
+                      <div class="border rounded p-2 dept-checkbox-box" style="max-height: 100px; overflow-y: auto;">
                         <div v-for="dept in departments" :key="dept.id" class="form-check mb-1">
                           <input
                             class="form-check-input"

@@ -2,7 +2,7 @@
   <div class="container-fluid wall overflow-auto" style="min-height: 700px;">
     <div class="row justify-content-center">
       <div class="col-12 col-md-11 col-lg-10 mt-3 mb-3">
-        <div class="card shadow bg-white">
+        <div class="card shadow card-dark">
 
           <!-- Header -->
           <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
@@ -36,7 +36,7 @@
               <!-- Overview -->
               <div class="mb-4">
                 <h5 class="mb-2"><i class="bi bi-info-circle me-2"></i>Overview</h5>
-                <div class="p-3 bg-light rounded border table-scroll-sm">
+                <div class="p-3 overview-box rounded border">
                   <p class="mb-0">{{ department.description || 'No description available.' }}</p>
                 </div>
               </div>

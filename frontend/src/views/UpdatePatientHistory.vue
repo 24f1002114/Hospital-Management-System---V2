@@ -199,18 +199,27 @@ form {
 
 .form-label {
   font-weight: 500;
-  color: #333;
+  color: var(--text);
 }
 
 textarea, input, select {
   border-radius: 0.375rem;
-  border: 1px solid #dee2e6;
+  border: 1px solid var(--border);
   padding: 0.5rem;
+  background-color: var(--card) !important;
+  color: var(--text) !important;
+  transition: all 0.2s ease;
+}
+
+textarea::placeholder, input::placeholder, select::placeholder {
+  color: var(--muted);
 }
 
 textarea:focus, input:focus, select:focus {
   border-color: #0d6efd;
   box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+  background-color: var(--card) !important;
+  color: var(--text) !important;
 }
 
 .btn {
@@ -219,8 +228,9 @@ textarea:focus, input:focus, select:focus {
 }
 
 .card {
-  border: 1px solid #dee2e6;
+  border: 1px solid var(--border);
   border-radius: 0.5rem;
+  background-color: var(--card);
 }
 
 .card-header {

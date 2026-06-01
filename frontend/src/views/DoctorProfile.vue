@@ -160,7 +160,9 @@ export default {
 .profile-card {
   border-radius: 16px;
   overflow: hidden;
-  background: #fff;
+  background: var(--card);
+  color: var(--text);
+  transition: all 0.3s ease;
 }
 
 .profile-banner {
@@ -176,8 +178,8 @@ export default {
   width: 110px;
   height: 110px;
   border-radius: 50%;
-  background: #fff;
-  border: 4px solid #fff;
+  background: var(--card);
+  border: 4px solid var(--card);
   box-shadow: 0 4px 16px rgba(0,0,0,0.15);
   display: flex;
   align-items: center;
@@ -194,6 +196,8 @@ export default {
 
 .profile-body {
   padding: 4rem 2rem 2rem 2rem;
+  background: var(--card);
+  color: var(--text);
 }
 
 .profile-name-row {
@@ -208,12 +212,12 @@ export default {
 .profile-name {
   font-size: 1.75rem;
   font-weight: 700;
-  color: #1a1a2e;
+  color: var(--text);
   margin-bottom: 0.25rem;
 }
 
 .profile-degree {
-  color: #6c757d;
+  color: var(--muted);
   font-size: 0.95rem;
   margin: 0;
 }
@@ -222,11 +226,13 @@ export default {
   display: flex;
   align-items: center;
   gap: 1.5rem;
-  background: #f8f9fa;
+  background: var(--bg);
   border-radius: 12px;
   padding: 1.25rem 1.5rem;
   margin-bottom: 1.75rem;
   flex-wrap: wrap;
+  border: 1px solid var(--border);
+  transition: all 0.3s ease;
 }
 
 .stat-item {
@@ -242,19 +248,19 @@ export default {
 .stat-value {
   font-weight: 700;
   font-size: 1rem;
-  color: #1a1a2e;
+  color: var(--text);
   line-height: 1.2;
 }
 
 .stat-label {
   font-size: 0.75rem;
-  color: #6c757d;
+  color: var(--muted);
 }
 
 .stat-divider {
   width: 1px;
   height: 36px;
-  background: #dee2e6;
+  background: var(--border);
 }
 
 .profile-section {
@@ -263,7 +269,7 @@ export default {
 
 .section-label {
   font-weight: 600;
-  color: #495057;
+  color: var(--muted);
   text-transform: uppercase;
   font-size: 0.78rem;
   letter-spacing: 0.06em;
@@ -271,7 +277,7 @@ export default {
 }
 
 .profile-bio {
-  color: #555;
+  color: var(--text);
   line-height: 1.7;
   margin: 0;
 }

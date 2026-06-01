@@ -2,7 +2,7 @@
   <div class="container-fluid wall overflow-auto" style="min-height: 700px;">
     <div class="row justify-content-center">
       <div class="col-12 col-md-11 col-lg-10 mt-3 mb-3">
-        <div class="card shadow bg-white">
+        <div class="card shadow card-dark">
 
           <!-- Loading -->
           <div v-if="loading" class="loading-container">
@@ -26,7 +26,7 @@
             <div class="card-body p-3 p-md-4">
 
               <!-- Add New Slot -->
-              <div class="border rounded p-3 mb-4 bg-light">
+              <div class="border rounded p-3 mb-4 add-slot-form">
                 <h5 class="mb-3">Add New Time Slot</h5>
                 <div class="row g-3 align-items-end">
                   <div class="col-6 col-md-2">
