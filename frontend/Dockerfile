@@ -16,7 +16,7 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Copy both nginx configs
 COPY nginx.dev.conf /etc/nginx/nginx.dev.conf
-COPY nginx.prod.conf.template /etc/nginx/nginx.prod.conf.template
+COPY nginx.prod.conf /etc/nginx/nginx.prod.conf
 
 # Copy entrypoint script
 COPY docker-entrypoint.sh /docker-entrypoint.sh

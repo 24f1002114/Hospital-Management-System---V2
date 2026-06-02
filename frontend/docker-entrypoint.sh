@@ -2,7 +2,7 @@
 
 if [ "$ENV" = "prod" ]; then
     echo "Starting in PRODUCTION mode (HTTPS)"
-    envsubst '${DOMAIN}' < /etc/nginx/nginx.prod.conf.template \
+    envsubst '${DOMAIN}' < /etc/nginx/nginx.prod.conf \
         > /etc/nginx/conf.d/default.conf
 else
     echo "Starting in DEVELOPMENT mode (HTTP)"
