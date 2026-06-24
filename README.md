@@ -7,10 +7,21 @@ Production-ready full-stack hospital management platform built with Flask, Vue.j
 **Email:** 24f1002114@ds.study.iitm.ac.in
 
 ---
-
+![Python](https://img.shields.io/badge/Python-3.10-blue)
+![Flask](https://img.shields.io/badge/Flask-3.1-black)
+![Vue.js](https://img.shields.io/badge/Vue.js-3-42b883)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791)
+![Redis](https://img.shields.io/badge/Redis-7-dc382d)
+![Celery](https://img.shields.io/badge/Celery-5.3-37814A)
+![Alembic](https://img.shields.io/badge/Alembic-Migrations-orange)
+![Docker](https://img.shields.io/badge/Docker-Containerized-2496ED)
+![Nginx](https://img.shields.io/badge/Nginx-Reverse%20Proxy-009639)
+![GitHub Actions](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-2088FF)
+---
 ## Table of Contents
 
 - [🏥 Hospital Management System — V2](#-hospital-management-system--v2)
+  - [](#)
   - [Table of Contents](#table-of-contents)
   - [Key Features](#key-features)
   - [Technology Stack](#technology-stack)
@@ -38,10 +49,6 @@ Production-ready full-stack hospital management platform built with Flask, Vue.j
   - [Configuration Reference](#configuration-reference)
   - [CI/CD Pipeline (GitHub Actions)](#cicd-pipeline-github-actions)
     - [Required GitHub Secrets](#required-github-secrets)
-  - [Production Setup (VPS)](#production-setup-vps)
-    - [Prerequisites](#prerequisites-1)
-    - [Firewall Rules](#firewall-rules)
-    - [Production Debugging](#production-debugging)
   - [Troubleshooting](#troubleshooting)
   - [Author](#author)
 
@@ -65,7 +72,7 @@ Production-ready full-stack hospital management platform built with Flask, Vue.j
 |---|---|
 | Frontend | Vue.js, Vite |
 | Backend | Flask, Flask-RESTful, Flask-Security, SQLAlchemy |
-| Database | PostgreSQL, SQLite |
+| Database | PostgreSQL |
 | Caching | Redis |
 | Background Jobs | Celery, Celery Beat |
 | Infrastructure | Gunicorn, Nginx |
@@ -154,12 +161,19 @@ Nginx (Frontend Container)
 
 ### Quick Start
 
+> ⚠️ If you have run this project before on this machine, wipe old volumes first to avoid migration conflicts:
+> ```bash
+> docker compose down -v
+> ```
+
 ```bash
 git clone <repo-url>
 cd Hospital-Management-System---V2
 
 # Copy and configure the backend environment file
 cp backend/application/.env.example backend/application/.env
+
+# Configure frontend and Docker environment files  
 
 # Start all services (backend, frontend, DB, Redis, Celery)
 docker compose up --build
@@ -169,8 +183,8 @@ Once running, the services are available at:
 
 | Service | URL |
 |---|---|
-| Frontend (App) | http://localhost:5173 |
-| Backend (API) | http://localhost:8000 |
+| Frontend (App) | http://localhost:80 |
+| Backend (API) | http://localhost:8000 (internal only) |
 
 A default admin account is created on first run using `ADMIN_EMAIL` and `ADMIN_PASSWORD` from your `.env`.
 
@@ -238,7 +252,7 @@ MAIL_DEFAULT_SENDER=noreply@example.com
 
 ### Frontend `.env`
 
-Place this file at `frontend/.env`.
+Place this file at `frontend/.env.development`.
 
 ```env
 VITE_API_URL=http://localhost:8000/api
@@ -251,7 +265,9 @@ VITE_APP_TITLE=HMS Dev
 
 ### Production-Like Local Setup (Recommended)
 
-Runs the full stack — backend, frontend, PostgreSQL, Redis, and Celery — in a production-like environment for consistency with VPS deployment. `ENV=prod` is intentional; this setup guarantees no environment-specific breakage before deploying.
+Using ENV=prod locally ensures Docker, Nginx, Gunicorn,
+Celery and PostgreSQL behave exactly as they do on the VPS,
+reducing deployment-only issues.
 
 ```bash
 docker compose up --build
@@ -330,7 +346,7 @@ docker compose run --rm migrate alembic revision --autogenerate -m "remove X"
 
 # 4. Apply locally and verify before pushing
 docker compose run --rm migrate alembic upgrade head
-docker compose exec postgres psql -U hospital_user -d hospital_db -c "\dt"
+docker compose exec postgres psql -U $POSTGRES_USER -d $POSTGRES_DB -c "\dt"
 
 # 5. Commit and push
 git add backend/migrations/
@@ -446,89 +462,20 @@ Push to production  (or manual trigger)
 
 ---
 
-## Production Setup (VPS)
-
-### Prerequisites
-
-- Ubuntu 24.04
-- Docker & Docker Compose installed
-- UFW firewall configured
-
-### Firewall Rules
-
-PostgreSQL runs inside Docker and communicates only on the internal Docker network — it never touches the host's network stack, so no UFW rules are needed for port 5432.
-
-```bash
-sudo ufw allow ssh
-sudo ufw allow 80
-sudo ufw allow 443
-sudo ufw enable
-
-# Verify
-sudo ufw status numbered
-```
-
-Expected output:
-
-```
-[ 1] Nginx Full       ALLOW IN    Anywhere
-[ 2] 22/tcp           ALLOW IN    Anywhere
-[ 3] Nginx Full (v6)  ALLOW IN    Anywhere (v6)
-[ 4] 22/tcp (v6)      ALLOW IN    Anywhere (v6)
-```
-
-### Production Debugging
-
-**Container Status**
-```bash
-docker compose ps
-docker compose logs -f
-docker compose logs -f backend
-docker compose logs -f celery
-docker compose logs migrate
-```
-
-**Resource Usage**
-```bash
-docker stats --no-stream
-free -h
-df -h
-```
-
-**Restart Services**
-```bash
-docker compose restart backend
-docker compose restart celery
-docker compose down && docker compose up -d
-```
-
-**Redis**
-```bash
-docker exec hms-redis redis-cli ping           # should return PONG
-docker exec hms-redis redis-cli -n 2 KEYS '*'  # view cached keys
-docker exec hms-redis redis-cli -n 2 FLUSHDB   # clear cache
-```
-
-**Ports**
-```bash
-sudo ss -tlnp | grep -E '80|443|5432'
-```
-
----
-
 ## Troubleshooting
 
 | Issue | Fix |
 |---|---|
 | Container not starting | `docker compose logs <service>` |
 | DB connection refused | Check UFW rules allow Docker subnet |
-| Port 80 already in use | Stop nginx systemd: `sudo systemctl stop nginx` |
+| Port 80 already in use | `sudo systemctl stop nginx` |
 | Redis connection error | Check hms-redis container is running |
 | 403 on API routes | Clear browser localStorage and re-login |
-| Workers crashing | Check `docker compose logs backend` for errors |
+| Workers crashing | `docker compose logs backend` |
 | GitHub Actions failing | Check all secrets are set in repo settings |
-| Migration fails with DuplicateTable | Tables exist but no alembic_version — run `alembic stamp <revision_id>` |
-| Migration upgrade() is empty | Autogenerate missed a removal — manually add `op.drop_table()` |
+| Migration fails with `Can't locate revision` | Old volume conflict — `docker compose down -v && docker compose up --build -d` |
+| Migration fails with `DuplicateTable` | Tables exist but no alembic_version — `alembic stamp <revision_id>` |
+| Migration `upgrade()` is empty | Autogenerate missed a removal — manually add `op.drop_table()` |
 
 ---
 
