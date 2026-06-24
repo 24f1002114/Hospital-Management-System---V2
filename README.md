@@ -1,10 +1,7 @@
 # 🏥 Hospital Management System — V2
+Modern Application Development - II Project
 
-**Modern Application Development - II Project**
-
-> Production-ready full-stack hospital management platform built with Flask, Vue.js, PostgreSQL, Redis, Docker, and Nginx. The system provides secure role-based access control, appointment scheduling, treatment management, asynchronous background processing, caching, and automated CI/CD deployment.
-
----
+Production-ready full-stack hospital management platform built with Flask, Vue.js, PostgreSQL, Redis, Docker, and Nginx. The system provides secure role-based access control, appointment scheduling, treatment management, asynchronous background processing, caching, and automated CI/CD deployment.
 
 **Name:** Anshul Shakya  
 **Email:** 24f1002114@ds.study.iitm.ac.in
@@ -18,7 +15,7 @@
   - [Key Features](#key-features)
   - [Technology Stack](#technology-stack)
   - [Architecture](#architecture)
-    - [Docker Services](#docker-services)
+  - [Docker Services](#docker-services)
   - [Database Schema](#database-schema)
     - [Core Entities](#core-entities)
     - [Relationships](#relationships)
@@ -26,25 +23,25 @@
   - [Application Setup](#application-setup)
     - [Prerequisites](#prerequisites)
     - [Quick Start](#quick-start)
-    - [Environment Configuration](#environment-configuration)
-      - [Root `.env` (Docker)](#root-env-docker)
-      - [Backend `.env`](#backend-env)
-      - [Frontend `.env`](#frontend-env)
-    - [Running the Application](#running-the-application)
-      - [Production-Like Local Setup (Recommended)](#production-like-local-setup-recommended)
-      - [Frontend Only (Local Dev)](#frontend-only-local-dev)
-    - [Configuration Reference](#configuration-reference)
+  - [Environment Configuration](#environment-configuration)
+    - [Root `.env` (Docker)](#root-env-docker)
+    - [Backend `.env`](#backend-env)
+    - [Frontend `.env`](#frontend-env)
+  - [Running the Application](#running-the-application)
+    - [Production-Like Local Setup (Recommended)](#production-like-local-setup-recommended)
+    - [Frontend Only (Local Dev)](#frontend-only-local-dev)
+  - [Database Migrations](#database-migrations)
+    - [Migration Service Flow](#migration-service-flow)
+    - [Developer Workflow](#developer-workflow)
+    - [Useful Commands](#useful-commands)
+    - [Rules](#rules)
+  - [Configuration Reference](#configuration-reference)
   - [CI/CD Pipeline (GitHub Actions)](#cicd-pipeline-github-actions)
     - [Required GitHub Secrets](#required-github-secrets)
   - [Production Setup (VPS)](#production-setup-vps)
     - [Prerequisites](#prerequisites-1)
     - [Firewall Rules](#firewall-rules)
-  - [Production Debugging](#production-debugging)
-    - [Container Status](#container-status)
-    - [Resource Usage](#resource-usage)
-    - [Restart Services](#restart-services)
-    - [Redis](#redis)
-    - [Ports](#ports)
+    - [Production Debugging](#production-debugging)
   - [Troubleshooting](#troubleshooting)
   - [Author](#author)
 
@@ -64,18 +61,18 @@
 
 ## Technology Stack
 
-| Layer            | Technologies                                          |
-|------------------|-------------------------------------------------------|
-| Frontend         | `Vue.js` `Vite`                                       |
-| Backend          | `Flask` `Flask-RESTful` `Flask-Security` `SQLAlchemy` |
-| Database         | `PostgreSQL` `SQLite`                                 |
-| Caching          | `Redis`                                               |
-| Background Jobs  | `Celery` `Celery Beat`                                |
-| Infrastructure   | `Gunicorn` `Nginx`                                    |
-| Containerization | `Docker` `Docker Compose`                             |
-| CI/CD            | `GitHub Actions`                                      |
-| Deployment       | `Linux VPS`                                           |
-| Email            | `Mailtrap`                                            |
+| Layer | Technologies |
+|---|---|
+| Frontend | Vue.js, Vite |
+| Backend | Flask, Flask-RESTful, Flask-Security, SQLAlchemy |
+| Database | PostgreSQL, SQLite |
+| Caching | Redis |
+| Background Jobs | Celery, Celery Beat |
+| Infrastructure | Gunicorn, Nginx |
+| Containerization | Docker, Docker Compose |
+| CI/CD | GitHub Actions |
+| Deployment | Linux VPS |
+| Email | Mailtrap |
 
 ---
 
@@ -101,16 +98,19 @@ Nginx (Frontend Container)
                              Celery Beat
 ```
 
-### Docker Services
+---
 
-| Container         | Purpose                                                                             |
-|-------------------|-------------------------------------------------------------------------------------|
-| `hms-frontend`    | Serves the Vue.js application through Nginx and proxies API requests to the backend |
-| `hms-backend`     | Hosts the Flask REST API using Gunicorn                                             |
-| `hms-postgres`    | Stores application data and persistent records                                      |
-| `hms-redis`       | Provides caching and serves as the Celery message broker                            |
-| `hms-celery`      | Executes asynchronous background tasks and scheduled jobs                           |
-| `hms-celery-beat` | Schedules periodic tasks for Celery workers                                         |
+## Docker Services
+
+| Container | Purpose |
+|---|---|
+| hms-migrate | Runs Alembic migrations and seeds roles/admin on every deployment |
+| hms-frontend | Serves the Vue.js application through Nginx and proxies API requests to the backend |
+| hms-backend | Hosts the Flask REST API using Gunicorn |
+| hms-postgres | Stores application data and persistent records |
+| hms-redis | Provides caching and serves as the Celery message broker |
+| hms-celery | Executes asynchronous background tasks and scheduled jobs |
+| hms-celery-beat | Schedules periodic tasks for Celery workers |
 
 ---
 
@@ -122,25 +122,25 @@ Nginx (Frontend Container)
 
 ### Relationships
 
-- **User ↔ Role** — Many-to-Many
-- **User ↔ PatientProfile** — One-to-One
-- **User ↔ DoctorProfile** — One-to-One
-- **DoctorProfile ↔ Department** — Many-to-Many
-- **PatientProfile ↔ Appointment** — One-to-Many
-- **DoctorProfile ↔ Appointment** — One-to-Many
-- **Appointment ↔ Treatment** — One-to-One
-- **Treatment ↔ Medicine** — One-to-Many
+- User ↔ Role — Many-to-Many
+- User ↔ PatientProfile — One-to-One
+- User ↔ DoctorProfile — One-to-One
+- DoctorProfile ↔ Department — Many-to-Many
+- PatientProfile ↔ Appointment — One-to-Many
+- DoctorProfile ↔ Appointment — One-to-Many
+- Appointment ↔ Treatment — One-to-One
+- Treatment ↔ Medicine — One-to-Many
 
 ---
 
 ## API Endpoints
 
-| Module               | Endpoints                                                                                           |
-|----------------------|-----------------------------------------------------------------------------------------------------|
-| **Authentication**   | `POST /api/login`, `GET /api/validate-token`                                                        |
-| **Administration**   | `/api/doctors`, `/api/doctor/<id>`, `/api/user/<id>/blacklist`, `/api/departments`                  |
-| **Patient Services** | `/api/patients`, `/api/patient/<id>`, `/api/search/doctors`, `/api/appointments`, `/api/treatments` |
-| **Doctor Services**  | `/api/availabilities`, `/api/doctor/availability/<id>`, `/api/appointments`, `/api/treatments`      |
+| Module | Endpoints |
+|---|---|
+| Authentication | `POST /api/login`, `GET /api/validate-token` |
+| Administration | `/api/doctors`, `/api/doctor/<id>`, `/api/user/<id>/blacklist`, `/api/departments` |
+| Patient Services | `/api/patients`, `/api/patient/<id>`, `/api/search/doctors`, `/api/appointments`, `/api/treatments` |
+| Doctor Services | `/api/availabilities`, `/api/doctor/availability/<id>`, `/api/appointments`, `/api/treatments` |
 
 ---
 
@@ -148,11 +148,9 @@ Nginx (Frontend Container)
 
 ### Prerequisites
 
-- [Docker & Docker Compose](https://docs.docker.com/get-docker/)
-- [Git](https://git-scm.com/)
-- [Node.js & npm](https://nodejs.org/) *(only for local frontend dev)*
-
----
+- Docker & Docker Compose
+- Git
+- Node.js & npm (only for local frontend dev)
 
 ### Quick Start
 
@@ -169,20 +167,20 @@ docker compose up --build
 
 Once running, the services are available at:
 
-| Service        | URL                   |
-|----------------|-----------------------|
+| Service | URL |
+|---|---|
 | Frontend (App) | http://localhost:5173 |
-| Backend (API)  | http://localhost:8000 |
+| Backend (API) | http://localhost:8000 |
 
-> A default admin account is created on first run using `ADMIN_EMAIL` and `ADMIN_PASSWORD` from your `.env`.
+A default admin account is created on first run using `ADMIN_EMAIL` and `ADMIN_PASSWORD` from your `.env`.
 
 ---
 
-### Environment Configuration
+## Environment Configuration
 
 > ⚠️ Never commit your `.env` files. Ensure they are listed in `.gitignore`.
 
-#### Root `.env` (Docker)
+### Root `.env` (Docker)
 
 Used by Docker Compose to configure shared services. Place this file in the project root.
 
@@ -196,7 +194,7 @@ POSTGRES_PASSWORD=your-postgres-password
 POSTGRES_DB=hospital_db
 ```
 
-#### Backend `.env`
+### Backend `.env`
 
 Place this file at `backend/application/.env` (copy from `.env.example` and fill in values).
 
@@ -238,7 +236,7 @@ MAIL_PASSWORD=your-mailtrap-password
 MAIL_DEFAULT_SENDER=noreply@example.com
 ```
 
-#### Frontend `.env`
+### Frontend `.env`
 
 Place this file at `frontend/.env`.
 
@@ -249,9 +247,9 @@ VITE_APP_TITLE=HMS Dev
 
 ---
 
-### Running the Application
+## Running the Application
 
-#### Production-Like Local Setup (Recommended)
+### Production-Like Local Setup (Recommended)
 
 Runs the full stack — backend, frontend, PostgreSQL, Redis, and Celery — in a production-like environment for consistency with VPS deployment. `ENV=prod` is intentional; this setup guarantees no environment-specific breakage before deploying.
 
@@ -259,7 +257,7 @@ Runs the full stack — backend, frontend, PostgreSQL, Redis, and Celery — in 
 docker compose up --build
 ```
 
-#### Frontend Only (Local Dev)
+### Frontend Only (Local Dev)
 
 ```bash
 cd frontend
@@ -269,24 +267,125 @@ npm run dev
 
 ---
 
-### Configuration Reference
+## Database Migrations
 
-| Variable                 | Description                                              |
-|--------------------------|----------------------------------------------------------|
-| `SECRET_KEY`             | Used for session management and token generation         |
-| `SECURITY_PASSWORD_SALT` | Salt used for password hashing                           |
-| `SECURITY_TOKEN_MAX_AGE` | Token expiry duration in seconds (default: 86400 = 24h)  |
-| `DATABASE_URL`           | PostgreSQL connection string                             |
-| `SQLALCHEMY_DATABASE_URI`| SQLAlchemy-specific PostgreSQL URI (same DB as above)    |
-| `REDIS_URL`              | Redis connection used for caching and Celery             |
-| `CELERY_BROKER_URL`      | Message broker URL for Celery task queue                 |
-| `CELERY_RESULT_BACKEND`  | Backend URL for storing Celery task results              |
-| `ADMIN_EMAIL`            | Email for the default admin account (created on startup) |
-| `ADMIN_PASSWORD`         | Password for the default admin account                   |
-| `ALLOWED_ORIGINS`        | Frontend origins permitted by CORS                       |
-| `MAIL_*`                 | Email service config for notifications and reminders     |
-| `VITE_API_URL`           | Backend API base URL consumed by the Vue frontend        |
-| `VITE_APP_TITLE`         | App title displayed in the browser tab                   |
+This project uses **Alembic** for database schema migrations. Migrations run automatically on every `docker compose up` via the `hms-migrate` service.
+
+### Migration Service Flow
+
+```
+docker compose up --build -d
+          │
+          ▼
+   hms-postgres (healthy)
+          │
+          ▼
+   hms-migrate
+   ─ alembic upgrade head    ← applies all pending migrations
+   ─ seed_roles_and_admin()  ← creates roles and admin (idempotent)
+          │
+          ▼
+   hms-backend + hms-celery + hms-celery-beat
+   (start only after migrate exits successfully)
+```
+
+### Developer Workflow
+
+**Adding a table or column (autogenerate works):**
+
+```bash
+# 1. Edit your model
+
+# 2. Generate migration
+docker compose run --rm migrate alembic revision --autogenerate -m "describe change"
+
+# 3. Review generated file — make sure upgrade() is not empty
+cat backend/migrations/versions/<revision_id>_describe_change.py
+
+# 4. Apply locally
+docker compose run --rm migrate alembic upgrade head
+
+# 5. Verify
+docker compose exec postgres psql -U hospital_user -d hospital_db -c "\dt"
+
+# 6. Commit and push
+git add backend/migrations/
+git commit -m "db: describe change [revision_id]"
+git push origin production
+```
+
+**Removing a table or column (manual edit required):**
+
+> ⚠️ Alembic never auto-detects removals to protect against accidental data loss. Always edit the file manually.
+
+```bash
+# 1. Remove model from code
+
+# 2. Generate migration
+docker compose run --rm migrate alembic revision --autogenerate -m "remove X"
+
+# 3. Manually edit the generated file
+#    Add to upgrade():   op.drop_table('table_name')
+#    Add to downgrade(): op.create_table(...)
+
+# 4. Apply locally and verify before pushing
+docker compose run --rm migrate alembic upgrade head
+docker compose exec postgres psql -U hospital_user -d hospital_db -c "\dt"
+
+# 5. Commit and push
+git add backend/migrations/
+git commit -m "db: remove X [revision_id]"
+git push origin production
+```
+
+### Useful Commands
+
+```bash
+# Check current revision
+docker compose run --rm migrate alembic current
+
+# View migration history
+docker compose run --rm migrate alembic history
+
+# Rollback one step
+docker compose run --rm migrate alembic downgrade -1
+
+# Force stamp without running SQL (emergency fix)
+docker compose run --rm migrate alembic stamp <revision_id>
+
+# Rebuild and apply migrations
+docker compose run --rm --build migrate alembic upgrade head
+```
+
+### Rules
+
+- ✅ Always review generated migration files before applying
+- ✅ Never push a migration with empty `upgrade()` — check for `pass`
+- ✅ Test locally first, then push to production
+- ✅ Commit migration files to git — CI/CD applies them automatically on deploy
+- ❌ Never manually edit the DB schema on production
+- ❌ Never delete a migration file that has already been applied to any DB
+
+---
+
+## Configuration Reference
+
+| Variable | Description |
+|---|---|
+| `SECRET_KEY` | Used for session management and token generation |
+| `SECURITY_PASSWORD_SALT` | Salt used for password hashing |
+| `SECURITY_TOKEN_MAX_AGE` | Token expiry duration in seconds (default: 86400 = 24h) |
+| `DATABASE_URL` | PostgreSQL connection string |
+| `SQLALCHEMY_DATABASE_URI` | SQLAlchemy-specific PostgreSQL URI (same DB as above) |
+| `REDIS_URL` | Redis connection used for caching and Celery |
+| `CELERY_BROKER_URL` | Message broker URL for Celery task queue |
+| `CELERY_RESULT_BACKEND` | Backend URL for storing Celery task results |
+| `ADMIN_EMAIL` | Email for the default admin account (created on startup) |
+| `ADMIN_PASSWORD` | Password for the default admin account |
+| `ALLOWED_ORIGINS` | Frontend origins permitted by CORS |
+| `MAIL_*` | Email service config for notifications and reminders |
+| `VITE_API_URL` | Backend API base URL consumed by the Vue frontend |
+| `VITE_APP_TITLE` | App title displayed in the browser tab |
 
 ---
 
@@ -316,7 +415,13 @@ Push to production  (or manual trigger)
   │  ─ git reset --hard origin/production    │
   │  ─ docker compose down                   │
   │  ─ docker compose up --build -d          │
+  │    ↓ hms-migrate runs automatically:     │
+  │      alembic upgrade head                │
+  │      seed_roles_and_admin()              │
+  │  ─ wait for backend healthy              │
   │  ─ docker compose ps  (health check)     │
+  │  ─ verify alembic_version table          │
+  │  ─ docker image prune -f                 │
   └──────────────────┬───────────────────────┘
                      │
           ┌──────────┴──────────┐
@@ -325,17 +430,19 @@ Push to production  (or manual trigger)
     echo deployed          echo failed
 ```
 
-> `script_stop: true` and `set -e` are set on the deploy script — any failed command aborts the deployment immediately.
+`script_stop: true` and `set -e` are set on the deploy script — any failed command aborts the deployment immediately.
 
-> `--legacy-peer-deps` is required due to a known peer dependency conflict in the frontend. `--maxsockets=1` throttles concurrent npm connections to avoid network errors on CI.
+`--legacy-peer-deps` is required due to a known peer dependency conflict in the frontend. `--maxsockets=1` throttles concurrent npm connections to avoid network errors on CI.
 
 ### Required GitHub Secrets
 
-| Secret        | Description     |
-|---------------|-----------------|
-| `VPS_HOST`    | VPS IP or domain |
-| `VPS_USER`    | SSH username    |
+| Secret | Description |
+|---|---|
+| `VPS_HOST` | VPS IP or domain |
+| `VPS_USER` | SSH username |
 | `VPS_SSH_KEY` | Private SSH key |
+| `POSTGRES_USER` | PostgreSQL username (for migration verification) |
+| `POSTGRES_DB` | PostgreSQL database name (for migration verification) |
 
 ---
 
@@ -345,7 +452,6 @@ Push to production  (or manual trigger)
 
 - Ubuntu 24.04
 - Docker & Docker Compose installed
-- PostgreSQL installed and running
 - UFW firewall configured
 
 ### Firewall Rules
@@ -371,45 +477,39 @@ Expected output:
 [ 4] 22/tcp (v6)      ALLOW IN    Anywhere (v6)
 ```
 
----
+### Production Debugging
 
-## Production Debugging
-
-### Container Status
-
+**Container Status**
 ```bash
 docker compose ps
 docker compose logs -f
 docker compose logs -f backend
 docker compose logs -f celery
+docker compose logs migrate
 ```
 
-### Resource Usage
-
+**Resource Usage**
 ```bash
 docker stats --no-stream
 free -h
 df -h
 ```
 
-### Restart Services
-
+**Restart Services**
 ```bash
 docker compose restart backend
 docker compose restart celery
 docker compose down && docker compose up -d
 ```
 
-### Redis
-
+**Redis**
 ```bash
 docker exec hms-redis redis-cli ping           # should return PONG
 docker exec hms-redis redis-cli -n 2 KEYS '*'  # view cached keys
 docker exec hms-redis redis-cli -n 2 FLUSHDB   # clear cache
 ```
 
-### Ports
-
+**Ports**
 ```bash
 sudo ss -tlnp | grep -E '80|443|5432'
 ```
@@ -418,18 +518,20 @@ sudo ss -tlnp | grep -E '80|443|5432'
 
 ## Troubleshooting
 
-| Issue                      | Fix                                                      |
-|----------------------------|----------------------------------------------------------|
-| Container not starting     | `docker compose logs <service>`                          |
-| DB connection refused      | Check UFW rules allow Docker subnet                      |
-| Port 80 already in use     | Stop nginx systemd: `sudo systemctl stop nginx`          |
-| Redis connection error     | Check `hms-redis` container is running                   |
-| 403 on API routes          | Clear browser localStorage and re-login                  |
-| Workers crashing           | Check `docker compose logs backend` for errors           |
-| GitHub Actions failing     | Check all secrets are set in repo settings               |
+| Issue | Fix |
+|---|---|
+| Container not starting | `docker compose logs <service>` |
+| DB connection refused | Check UFW rules allow Docker subnet |
+| Port 80 already in use | Stop nginx systemd: `sudo systemctl stop nginx` |
+| Redis connection error | Check hms-redis container is running |
+| 403 on API routes | Clear browser localStorage and re-login |
+| Workers crashing | Check `docker compose logs backend` for errors |
+| GitHub Actions failing | Check all secrets are set in repo settings |
+| Migration fails with DuplicateTable | Tables exist but no alembic_version — run `alembic stamp <revision_id>` |
+| Migration upgrade() is empty | Autogenerate missed a removal — manually add `op.drop_table()` |
 
 ---
 
 ## Author
 
-**Anshul Shakya** — [@24f1002114](https://github.com/24f1002114)
+**Anshul Shakya** — @24f1002114
