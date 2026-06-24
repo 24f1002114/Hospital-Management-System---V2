@@ -127,3 +127,4 @@ class Medicine(db.Model):
     name = db.Column(db.String, nullable=False)
     dosage = db.Column(db.String, nullable=False)
     duration_days = db.Column(db.Integer, nullable=False)
+

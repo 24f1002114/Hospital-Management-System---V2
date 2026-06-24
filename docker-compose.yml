@@ -35,6 +35,29 @@ services:
       timeout: 5s
       retries: 5
 
+  # ── DB Migration ───────────────────────────────────────
+  migrate:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      network: host
+    container_name: hms-migrate
+    command: >
+      sh -c "alembic upgrade head &&
+             python -c 'from app import seed_roles_and_admin; seed_roles_and_admin()'"
+    env_file:
+      - ./backend/application/.env
+    environment:
+      - ENV=prod
+    volumes:
+      - ./backend/migrations:/app/migrations
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - hms-network
+    restart: no
+
   # ── Backend ────────────────────────────────────────────
   backend:
     build:
@@ -56,6 +79,8 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     networks:
       - hms-network
     healthcheck:
@@ -85,6 +110,8 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     networks:
       - hms-network
 
@@ -108,6 +135,8 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     networks:
       - hms-network
 

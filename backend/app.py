@@ -8,7 +8,6 @@ if env == "prod":
 else:
     load_dotenv(".env.dev", override=True)
 
-    
 from flask import Flask
 from application.cache import cache
 from application.database import db
@@ -48,7 +47,8 @@ def create_app():
     db.init_app(app)
     cache.init_app(app)
     api.init_app(app)
-
+    with app.app_context():
+        from application import routes
     @app.teardown_appcontext
     def shutdown_session(exception=None):
         db.session.remove()
@@ -57,31 +57,40 @@ def create_app():
     app.security = Security(app, datastore)
     return app
 
-
 app = create_app()
 celery = celery_init_app(app)
 celery.autodiscover_tasks()
 
-with app.app_context():
-    import application.routes
-    db.create_all()
-    app.security.datastore.find_or_create_role(name="admin", description="Superuser of app")
-    app.security.datastore.find_or_create_role(name="doctor", description="General user of app")
-    app.security.datastore.find_or_create_role(name="patient", description="General user of app")
-    db.session.commit()
+def seed_roles_and_admin():
+    with app.app_context():
+        app.security.datastore.find_or_create_role(
+            name="admin",
+            description="Superuser of app"
+        )
+        app.security.datastore.find_or_create_role(
+            name="doctor",
+            description="General user of app"
+        )
+        app.security.datastore.find_or_create_role(
+            name="patient",
+            description="General user of app"
+        )
 
-    admin_email = os.getenv("ADMIN_EMAIL")
-    admin_password = os.getenv("ADMIN_PASSWORD")
-    if admin_email and admin_password:
-        if not app.security.datastore.find_user(email=admin_email):
-            app.security.datastore.create_user(
-                email=admin_email,
-                username="admin",
-                password=generate_password_hash(admin_password),
-                roles=['admin']
-            )
         db.session.commit()
 
+        admin_email = os.getenv("ADMIN_EMAIL")
+        admin_password = os.getenv("ADMIN_PASSWORD")
+
+        if admin_email and admin_password:
+            if not app.security.datastore.find_user(email=admin_email):
+                app.security.datastore.create_user(
+                    email=admin_email,
+                    username="admin",
+                    password=generate_password_hash(admin_password),
+                    roles=["admin"],
+                )
+
+            db.session.commit()
 
 @celery.on_after_finalize.connect
 def setup_periodic_tasks(sender, **kwargs):
@@ -102,4 +111,5 @@ def setup_periodic_tasks(sender, **kwargs):
 
 
 if __name__ == "__main__":
+    seed_roles_and_admin()
     app.run()
