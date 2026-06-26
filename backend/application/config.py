@@ -19,11 +19,6 @@ class Config():
     MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
     MAIL_DEFAULT_SENDER = os.getenv("MAIL_DEFAULT_SENDER")
 
-    # Celery
-    CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL")
-    CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND")
-
-
 class LocalDevelopmentConfig(Config):
     DEBUG = True
     SQLALCHEMY_DATABASE_URI = os.getenv("SQLALCHEMY_DATABASE_URI")

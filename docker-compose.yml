@@ -83,6 +83,8 @@ services:
         condition: service_completed_successfully
     networks:
       - hms-network
+    volumes:
+    - reports_data:/app/static
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/')"]
       interval: 15s
@@ -100,6 +102,8 @@ services:
     restart: unless-stopped
     extra_hosts:
       - "host.docker.internal:${DOCKER_HOST_IP:-host-gateway}"
+    volumes:
+    - reports_data:/app/static
     command: celery -A app.celery worker --loglevel=info --concurrency=1
     env_file:
       - ./backend/application/.env
@@ -164,6 +168,7 @@ services:
 
 volumes:
   postgres_data:
+  reports_data:
 
 networks:
   hms-network:
